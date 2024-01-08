@@ -52,11 +52,24 @@ class Readings
 
   Readings() 
   { 
+      init();
+  };
+
+  void init()
+  {
     dt = 0;
     temperature = NAN;
     humidity = NAN;
     soilHumidity = NAN;
-  };
+  }
+
+  void assign(Readings *source)
+  {
+    dt = source->dt;
+    temperature = source->temperature;
+    humidity = source->humidity;
+    soilHumidity = source->soilHumidity;    
+  }
 };
 
 Readings *readingsArchive[READINGS_ARCHIVE_LENGTH];
@@ -201,9 +214,12 @@ void initReadings()
 Readings* prepareReadings()
 {
   for (int i = READINGS_ARCHIVE_LENGTH - 1; i >= 1 ; i--)  
-    readingsArchive[i] = readingsArchive[i - 1];
+    readingsArchive[i]->assign(readingsArchive[i - 1]);
 
-  return readingsArchive[0];  
+  Readings *r = readingsArchive[0];  
+  r->init();
+
+  return r;
 }
 
 void lcdFirstLine()
@@ -432,4 +448,5 @@ void loop()
   displayValues(r);
 
   delay(3000);
+  yield();
 }
