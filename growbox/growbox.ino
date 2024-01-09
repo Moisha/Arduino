@@ -4,14 +4,9 @@
 #include <DHT.h>
 #include <RTClib.h>
 #include <LiquidCrystal_I2C.h>
-
-#define RTC_CONNECTED 
-#define RTC_UPDATE_TIME 
-
-#define LOG_TIME
-#define LOG_DHT
-#define LOG_WATER
-#define LOG_LAMP_MODE
+#include "wifi.h"
+#include "readings.h"
+#include "options.h"
 
 #define DHTTYPE DHT22     // DHT 22 (AM2302)
 #define DHTPIN D5
@@ -21,7 +16,6 @@
 #define WATER_PIN D6
 #define GROW_BEG_SHITCH_PIN D7
 
-#define READINGS_ARCHIVE_LENGTH 100
 #define LCD_FILLER "                "
 
 DHT dht(DHTPIN, DHTTYPE); // temp and hum
@@ -31,48 +25,11 @@ LiquidCrystal_I2C lcd(0x27, 16, 2); // display
 int displayMode = 0;
 
 int lampMode = 0; // 0 - grow, 1 - veg
-int lampNightStartHour[2] = {22, 20};
-int lampDayStartHour[2] = {3, 8};
 bool lampRelayState = false;
-
-const float dailyWateringVolume = 100;
-const float wateringPerMinute = 125;
 
 uint32_t wateringLastTime = 0;
 uint32_t wateringStartTime = 0;
 bool wateringState = false;
-
-class Readings
-{
-  public:
-    uint32_t dt;
-    float temperature;
-    float humidity;
-    float soilHumidity;
-
-  Readings() 
-  { 
-      init();
-  };
-
-  void init()
-  {
-    dt = 0;
-    temperature = NAN;
-    humidity = NAN;
-    soilHumidity = NAN;
-  }
-
-  void assign(Readings *source)
-  {
-    dt = source->dt;
-    temperature = source->temperature;
-    humidity = source->humidity;
-    soilHumidity = source->soilHumidity;    
-  }
-};
-
-Readings *readingsArchive[READINGS_ARCHIVE_LENGTH];
 
 void initRelays()
 {
@@ -422,14 +379,13 @@ void setup() {
   delay(1000);  
 
   initReadings();
-  initSerial();  
-
+  initSerial(); 
   initDHT();
   initRTC(); 
   initDisplay();
-
   initRelays();
   initGrowVerSwitch();
+  initWiFi();  
 }
 
 void loop()
@@ -446,6 +402,8 @@ void loop()
   checkWatering(r);
   
   displayValues(r);
+
+  scanWiFi();
 
   delay(3000);
   yield();
