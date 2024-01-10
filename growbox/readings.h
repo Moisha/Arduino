@@ -56,11 +56,11 @@ class Readings
     if (dt <= 0)
       return "";
 
-    String res = 
+    String res = "{\r\n" +
       formatForJSON("dt", String(dt)) + 
-      formatForJSON("lampMode", String(lampMode)) + 
-      formatForJSON("lampState", String(lampRelayState)) +
-      formatForJSON("wateringState", String(wateringState));
+      formatForJSON("lampMode", String((int)lampMode)) + 
+      formatForJSON("lampState", String((int)lampRelayState)) +
+      formatForJSON("wateringState", String((int)wateringState));
 
     if (!isnan(temperature))
       res += formatForJSON("temperature", floatToStr(temperature));
@@ -70,6 +70,8 @@ class Readings
 
     if (!isnan(soilHumidity))
       res += formatForJSON("soilHumidity", floatToStr(soilHumidity));
+
+    res += "}";
 
     return res;
   }

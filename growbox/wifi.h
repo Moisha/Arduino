@@ -6,16 +6,25 @@
 
 Readings lastWiFiExchangeReadings;
 
+void LogWiFi(String s, bool ln = true)
+{
+  #ifdef LOG_HTTP
+    Serial.print(s);  
+    if (ln)
+      Serial.println();  
+  #endif
+}
+
 void initWiFi()
 {
-  // WiFi.mode(WIFI_STA);
+  WiFi.mode(WIFI_STA);
 }
 
 bool connectWiFi()
 {
   if (WiFi.status() == WL_CONNECTED)
   {
-    Serial.println("WiFi connected");
+    LogWiFi("WiFi connected");
     return true;
   }
 
@@ -25,35 +34,70 @@ bool connectWiFi()
   while (--tries && WiFi.status() != WL_CONNECTED) 
   {
     delay(500);
-    Serial.print(".");
+    LogWiFi(".", false);
   }
 
   if (WiFi.status() != WL_CONNECTED)
   {
-    Serial.println("Non Connecting to WiFi..");
+    LogWiFi("Non Connecting to WiFi..");
     return false;
   }
 
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
+  LogWiFi("WiFi connected");
+  LogWiFi("IP address: ", false);
+  LogWiFi(WiFi.localIP());
   return true;
 }
 
-bool postMeasurings()
+bool checkHttpResponceCode(int httpCode)
 {
-  /*
+ // httpCode will be negative on error
+  if (httpCode <= 0)
+  {
+    LogWiFi("[HTTP] POST... failed, error: ", false);
+    LogWiFi(http.errorToString(httpCode).c_str());
+    return false;
+  }  
+  
+  // HTTP header has been send and Server response header has been handled
+  LogWiFi("[HTTP] POST... code:", false);
+  LogWiFi(httpCode);
+
+  // file found at server
+  if (httpCode == HTTP_CODE_OK) {
+    const String& payload = http.getString();
+    LogWiFi("received payload:<<");
+    LogWiFi(payload);
+    LogWiFi(">>");
+    return true;
+  }
+
+  return false;
+}
+
+bool postMeasurings(Readings *r)
+{
+  WiFiClient wifiClient; 
   HTTPClient http;
-  http.begin(WiFi., WIFI_POST_DATA_URL);
-  http.addHeader("Content-Type", "text/plain");
-  */
-  return true;
+  http.begin(wifiClient, WIFI_POST_DATA_URL);
+  http.addHeader("Content-Type", "application/json");
+
+  String json = r->toJSON();
+  LogWiFi(json);
+
+  int httpCode = http.POST(json);
+  http.end();
+
+  return checkHttpResponceCode(httpCode); 
 }
 
 bool needSend(Readings *r)
 {
-  return r->dt - lastWiFiExchangeReadings.dt < ARCHIVE_TIME_SECONDS;
+  return 
+    r->dt - lastWiFiExchangeReadings.dt < ARCHIVE_TIME_SECONDS
+    || r->lampMode != lastWiFiExchangeReadings.lampMode
+    || r->lampRelayState != lastWiFiExchangeReadings.lampRelayState
+    || r->wateringState != lastWiFiExchangeReadings.wateringState;
 }
 
 void postData(Readings *r)
@@ -64,7 +108,7 @@ void postData(Readings *r)
   if (!connectWiFi())
     return;
 
-  if (!postMeasurings())
+  if (!postMeasurings(r))
     return;
 
   lastWiFiExchangeReadings.assign(r);    

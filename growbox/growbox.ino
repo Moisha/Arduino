@@ -387,7 +387,7 @@ void loop()
   
   displayValues(r);
 
-  scanWiFi();
+  postMeasurings(r);
 
   delay(3000);
   yield();
