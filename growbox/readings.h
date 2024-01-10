@@ -48,8 +48,7 @@ class Readings
 
   String formatForJSON(String name, String val)
   {
-    String quote = "\"";
-    return "\"" + name + "\": " + quote + val + quote + ",\n";
+    return "\"" + name + "\": \"" + val + "\",\n";
   }
 
   String toJSON()
@@ -59,8 +58,8 @@ class Readings
 
     DateTime forStr(dt);
     String res = "{\r\n" +
-      formatForJSON("dt", forStr.timestamp()) +
-      formatForJSON("dtStr", String(dt)) + 
+      formatForJSON("dtStr", forStr.timestamp()) +
+      formatForJSON("dt", String(dt)) + 
       formatForJSON("lampMode", String((int)lampMode)) + 
       formatForJSON("lampState", String((int)lampRelayState)) +
       formatForJSON("wateringState", String((int)wateringState));

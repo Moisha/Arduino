@@ -378,8 +378,8 @@ void loop()
 
   Readings *r = prepareReadings();
 
-  readDHT(r);
   readRTC(r);
+  readDHT(r);
   readSoil(r);
 
   checkLampMode(r);

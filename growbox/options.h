@@ -17,8 +17,8 @@ int lampDayStartHour[2] = {3, 8};
 
 #define WIFI_SSID  "Trifon"
 #define WIFI_PASSWORD  "18000dong"
-#define WIFI_POST_DATA_URL "http://192.168.1.9:9000" // Kibbutz
-// #define WIFI_POST_DATA_URL "http://192.168.1.10:9000" // Melchior
+//#define WIFI_POST_DATA_URL "http://192.168.1.9:9000" // Kibbutz
+#define WIFI_POST_DATA_URL "http://192.168.1.10:9000" // Melchior
 
 #define ARCHIVE_TIME_SECONDS 180
 

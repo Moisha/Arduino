@@ -59,15 +59,22 @@ class HttpGrowBoxHandler(BaseHTTPRequestHandler):
         self.wfile.write('<body>Был получен GET-запрос.</body></html>'.encode())
 
     def do_POST(self):
-        content_len = int(self.headers.get('Content-Length'))
-        post_body = self.rfile.read(content_len)
-        print(post_body)
-        saveToPg(post_body)
+        responce_code = 200
+        responce_text = "OK"
+        try:
+            content_len = int(self.headers.get('Content-Length'))
+            post_body = self.rfile.read(content_len)
+            print(post_body)
+            saveToPg(post_body)
+        except Exception as e:
+            responce_code = 500
+            responce_text = e
+            pass
 
-        self.send_response(200)
+        self.send_response(responce_code)
         self.send_header("Content-type", "text/plain")
         self.end_headers()
-        self.wfile.write('OK'.encode())
+        self.wfile.write(responce_text.encode())
 
 def run():
   server_address = ('', 9000)
@@ -77,39 +84,5 @@ def run():
   except KeyboardInterrupt:
       httpd.server_close()
 
-class AppServerSvc (win32serviceutil.ServiceFramework):
-    _svc_name_ = "growbox_http"
-    _svc_display_name_ = "Growbox data reciever service"
-
-    def __init__(self,args):
-        win32serviceutil.ServiceFramework.__init__(self,args)
-        self.hWaitStop = win32event.CreateEvent(None,0,0,None)
-        socket.setdefaulttimeout(60)
-
-    def SvcStop(self):
-        self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
-        win32event.SetEvent(self.hWaitStop)
-
-    def SvcDoRun(self):
-        servicemanager.LogMsg(servicemanager.EVENTLOG_INFORMATION_TYPE,
-                          servicemanager.PYS_SERVICE_STARTED,
-                          (self._svc_name_,''))
-        self.main()
-
-    def main(self):
-        thread = threading.Thread(target=run)
-        thread.start()
-        rc = None
-        while rc != win32event.WAIT_OBJECT_0:
-            rc = win32event.WaitForSingleObject(self.hWaitStop, 1000)
-
 if __name__ == '__main__':
-    if (len(sys.argv) > 1) & (sys.argv[1] == 'console'):
-        run()
-#    else:
-#        win32serviceutil.HandleCommandLine(AppServerSvc)
-#    threading.Thread(target=run).start()
-#    while(True):
-#        print("working")
-#        time.sleep(1)
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    run()
