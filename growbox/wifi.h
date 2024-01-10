@@ -22,6 +22,7 @@ void initWiFi()
 
 bool connectWiFi()
 {
+  LogWiFi("Try connecting to WiFi");
   if (WiFi.status() == WL_CONNECTED)
   {
     LogWiFi("WiFi connected");
@@ -44,12 +45,12 @@ bool connectWiFi()
   }
 
   LogWiFi("WiFi connected");
-  LogWiFi("IP address: ", false);
-  LogWiFi(WiFi.localIP());
+//  LogWiFi("IP address: ", false);
+//  LogWiFi(WiFi.localIP());
   return true;
 }
 
-bool checkHttpResponceCode(int httpCode)
+bool checkHttpResponceCode(HTTPClient &http, int httpCode)
 {
  // httpCode will be negative on error
   if (httpCode <= 0)
@@ -61,24 +62,25 @@ bool checkHttpResponceCode(int httpCode)
   
   // HTTP header has been send and Server response header has been handled
   LogWiFi("[HTTP] POST... code:", false);
-  LogWiFi(httpCode);
+  LogWiFi(String(httpCode));
 
-  // file found at server
-  if (httpCode == HTTP_CODE_OK) {
-    const String& payload = http.getString();
-    LogWiFi("received payload:<<");
-    LogWiFi(payload);
-    LogWiFi(">>");
-    return true;
-  }
+  return httpCode == HTTP_CODE_OK;
+}
 
-  return false;
+void logHttpResponce(HTTPClient &http)
+{
+  const String& payload = http.getString();
+  LogWiFi("received payload:<<");
+  LogWiFi(payload);
+  LogWiFi(">>");
 }
 
 bool postMeasurings(Readings *r)
 {
   WiFiClient wifiClient; 
   HTTPClient http;
+
+  LogWiFi("URL: " WIFI_POST_DATA_URL);
   http.begin(wifiClient, WIFI_POST_DATA_URL);
   http.addHeader("Content-Type", "application/json");
 
@@ -86,22 +88,30 @@ bool postMeasurings(Readings *r)
   LogWiFi(json);
 
   int httpCode = http.POST(json);
-  http.end();
+  bool res = checkHttpResponceCode(http, httpCode);
+  if (res) 
+    logHttpResponce(http);
 
-  return checkHttpResponceCode(httpCode); 
+  http.end();
+  return res;
 }
 
 bool needSend(Readings *r)
 {
-  return 
-    r->dt - lastWiFiExchangeReadings.dt < ARCHIVE_TIME_SECONDS
-    || r->lampMode != lastWiFiExchangeReadings.lampMode
-    || r->lampRelayState != lastWiFiExchangeReadings.lampRelayState
-    || r->wateringState != lastWiFiExchangeReadings.wateringState;
+  bool res = r->dt - lastWiFiExchangeReadings.dt > ARCHIVE_TIME_SECONDS
+    || (r->lampMode != lastWiFiExchangeReadings.lampMode)
+    || (r->lampRelayState != lastWiFiExchangeReadings.lampRelayState)
+    || (r->wateringState != lastWiFiExchangeReadings.wateringState);
+
+  LogWiFi("WiFi: ", false);
+  LogWiFi(res ? "Need send" : "No need send");
+
+  return res;
 }
 
 void postData(Readings *r)
 {
+  LogWiFi("WiFi: post data");
   if (!needSend(r))
     return;
 

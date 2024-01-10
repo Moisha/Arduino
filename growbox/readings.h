@@ -48,7 +48,8 @@ class Readings
 
   String formatForJSON(String name, String val)
   {
-    return "\"" + name + ": \"" + val + "\"\r\n";
+    String quote = "\"";
+    return "\"" + name + "\": " + quote + val + quote + ",\n";
   }
 
   String toJSON()
@@ -56,8 +57,10 @@ class Readings
     if (dt <= 0)
       return "";
 
+    DateTime forStr(dt);
     String res = "{\r\n" +
-      formatForJSON("dt", String(dt)) + 
+      formatForJSON("dt", forStr.timestamp()) +
+      formatForJSON("dtStr", String(dt)) + 
       formatForJSON("lampMode", String((int)lampMode)) + 
       formatForJSON("lampState", String((int)lampRelayState)) +
       formatForJSON("wateringState", String((int)wateringState));
@@ -70,6 +73,8 @@ class Readings
 
     if (!isnan(soilHumidity))
       res += formatForJSON("soilHumidity", floatToStr(soilHumidity));
+
+    res = res.substring(0, res.length() - 2) + "\n"; // уберем запятую в конце
 
     res += "}";
 

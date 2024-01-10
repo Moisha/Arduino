@@ -387,7 +387,7 @@ void loop()
   
   displayValues(r);
 
-  postMeasurings(r);
+  postData(r);
 
   delay(3000);
   yield();
