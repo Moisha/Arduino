@@ -2,6 +2,7 @@
 #define growbox_readings_h
 
 #include "options.h"
+#include "utils.h"
 
 class Readings;
 
@@ -14,6 +15,9 @@ class Readings
     float temperature;
     float humidity;
     float soilHumidity;
+    int lampMode; // 0 - grow, 1 - veg
+    bool lampRelayState;
+    bool wateringState;
 
   Readings() 
   { 
@@ -26,6 +30,9 @@ class Readings
     temperature = NAN;
     humidity = NAN;
     soilHumidity = NAN;
+    lampMode = 0;
+    lampRelayState = false;
+    wateringState = false;
   }
 
   void assign(Readings *source)
@@ -34,46 +41,49 @@ class Readings
     temperature = source->temperature;
     humidity = source->humidity;
     soilHumidity = source->soilHumidity;    
+    lampMode = source->lampMode;
+    lampRelayState = source->lampRelayState;
+    wateringState = source->wateringState;
   }
 
-  String toJSON(int lastTime)
+  String formatForJSON(String name, String val)
   {
-    float sumT = 0;
-    float sumH = 0;
-    float sumSH = 0;    
+    return "\"" + name + ": \"" + val + "\"\r\n";
+  }
 
-    float countT = 0;
-    float countH = 0;
-    float countSH = 0;    
+  String toJSON()
+  {
+    if (dt <= 0)
+      return "";
 
-    for (int i = 0; i < READINGS_ARCHIVE_LENGTH; i++)
-    {
-      Readings *r = readingsArchive[i];
-      if (r->dt <= lastTime || r->dt == 0)
-        break;
+    String res = 
+      formatForJSON("dt", String(dt)) + 
+      formatForJSON("lampMode", String(lampMode)) + 
+      formatForJSON("lampState", String(lampRelayState)) +
+      formatForJSON("wateringState", String(wateringState));
 
-      if (!isnan(r->temperature))
-      {
-        sumT += r->temperature;
-        countT ++;
-      }
-      
-      if (!isnan(r->humidity))
-      {
-        sumH += r->humidity;
-        countH ++;
-      }
+    if (!isnan(temperature))
+      res += formatForJSON("temperature", floatToStr(temperature));
 
-      if (!isnan(r->soilHumidity))
-      {
-        sumSH += r->soilHumidity;
-        countSH ++;
-      }
-    }
+    if (!isnan(humidity))
+      res += formatForJSON("humidity", floatToStr(humidity));
 
-    String res = "{";
+    if (!isnan(soilHumidity))
+      res += formatForJSON("soilHumidity", floatToStr(soilHumidity));
+
     return res;
   }
 };
+
+Readings* prepareReadings()
+{
+  for (int i = READINGS_ARCHIVE_LENGTH - 1; i >= 1 ; i--)  
+    readingsArchive[i]->assign(readingsArchive[i - 1]);
+
+  Readings *r = readingsArchive[0];  
+  r->init();
+
+  return r;
+}
 
 #endif

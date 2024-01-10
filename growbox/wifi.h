@@ -4,7 +4,7 @@
 #include "options.h"
 #include "readings.h"
 
-int lastWiFiExchange = 0;
+Readings lastWiFiExchangeReadings;
 
 void initWiFi()
 {
@@ -13,7 +13,14 @@ void initWiFi()
 
 bool connectWiFi()
 {
+  if (WiFi.status() == WL_CONNECTED)
+  {
+    Serial.println("WiFi connected");
+    return true;
+  }
+
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+
   int tries = 10; 
   while (--tries && WiFi.status() != WL_CONNECTED) 
   {
@@ -44,9 +51,14 @@ bool postMeasurings()
   return true;
 }
 
+bool needSend(Readings *r)
+{
+  return r->dt - lastWiFiExchangeReadings.dt < ARCHIVE_TIME_SECONDS;
+}
+
 void postData(Readings *r)
 {
-  if (r->dt - lastWiFiExchange < ARCHIVE_TIME_SECONDS)
+  if (!needSend(r))
     return;
 
   if (!connectWiFi())
@@ -55,7 +67,7 @@ void postData(Readings *r)
   if (!postMeasurings())
     return;
 
-  lastWiFiExchange = r->dt;    
+  lastWiFiExchangeReadings.assign(r);    
 }
 
 void scanWiFi()
@@ -79,7 +91,6 @@ void scanWiFi()
                   
       Serial.print(WiFi.RSSI(i));//Signal strength in dBm  
       Serial.print("dBm (");
-
       
       Serial.print(WiFi.RSSI(i));//Signal strength in %  
      Serial.print("% )"); 

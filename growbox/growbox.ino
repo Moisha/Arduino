@@ -24,12 +24,8 @@ LiquidCrystal_I2C lcd(0x27, 16, 2); // display
 
 int displayMode = 0;
 
-int lampMode = 0; // 0 - grow, 1 - veg
-bool lampRelayState = false;
-
 uint32_t wateringLastTime = 0;
 uint32_t wateringStartTime = 0;
-bool wateringState = false;
 
 void initRelays()
 {
@@ -168,17 +164,6 @@ void initReadings()
     readingsArchive[i] = new Readings();
 }
 
-Readings* prepareReadings()
-{
-  for (int i = READINGS_ARCHIVE_LENGTH - 1; i >= 1 ; i--)  
-    readingsArchive[i]->assign(readingsArchive[i - 1]);
-
-  Readings *r = readingsArchive[0];  
-  r->init();
-
-  return r;
-}
-
 void lcdFirstLine()
 {
   lcd.setCursor(0, 0);    
@@ -240,16 +225,16 @@ void displayLamp(Readings *r)
 {
   lcdFirstLine();  
   lcd.print("M: ");
-  lcd.print(lampMode ? "Veg" : "Grow");
+  lcd.print(r->lampMode ? "Veg" : "Grow");
   lcd.print(", R: ");
-  lcd.print(lampRelayState);
+  lcd.print(r->lampRelayState);
   lcd.print(LCD_FILLER);
 
   lcdSecondLine();  
   lcd.print("D: ");
-  lcd.print(lampDayStartHour[lampMode]);
+  lcd.print(lampDayStartHour[r->lampMode]);
   lcd.print(", N: ");
-  lcd.print(lampNightStartHour[lampMode]);
+  lcd.print(lampNightStartHour[r->lampMode]);
   lcd.print(LCD_FILLER);  
 }
 
@@ -283,37 +268,34 @@ void displayValues(Readings *r)
 
 void switchLamp(bool v)
 {
-  lampRelayState = v;
-
   #ifdef LOG_LAMP_MODE  
     Serial.print("switchLamp ");
-    Serial.println(lampRelayState);    
+    Serial.println(v);    
   #endif
 
-  digitalWrite(LAMP_PIN, lampRelayState ? LOW : HIGH);  
+  digitalWrite(LAMP_PIN, v ? LOW : HIGH);  
 }
 
 void checkLampMode(Readings *r)
 {
   DateTime dt(r->dt);
 
-  lampMode = digitalRead(GROW_BEG_SHITCH_PIN); // read from switch
-  switchLamp(dt.hour() >= lampDayStartHour[lampMode] && dt.hour() < lampNightStartHour[lampMode]);
+  r->lampMode = digitalRead(GROW_BEG_SHITCH_PIN); // read from switch
+  r->lampRelayState = dt.hour() >= lampDayStartHour[r->lampMode] && dt.hour() < lampNightStartHour[r->lampMode];
+  switchLamp(r->lampRelayState);
 
   #ifdef LOG_LAMP_MODE  
     Serial.print("lampMode ");
-    Serial.println(lampMode);    
+    Serial.println(r->lampMode);    
   #endif
 }
 
 void switchWatering(bool v)
 {
-  wateringState = v;
-
   logWatering("switchWatering ", false);
-  logWatering(wateringState);
+  logWatering(v);
 
-  digitalWrite(WATER_PIN, wateringState ? LOW : HIGH);  
+  digitalWrite(WATER_PIN, v ? LOW : HIGH);  
 }
 
 void checkStopWatering(Readings *r)
@@ -331,7 +313,8 @@ void checkStopWatering(Readings *r)
 
   if (wateringDurationSeconds >= wateringDurationLimitSeconds)
   {
-    switchWatering(false);
+    r->wateringState = false;
+    switchWatering(r->wateringState);
     wateringStartTime = 0;
     wateringLastTime = r->dt;    
   }  
@@ -341,7 +324,7 @@ void checkStartWatering(Readings *r)
 {
   logWatering("checkStartWatering");
 
-  if (lampRelayState) // watering at night time
+  if (r->lampRelayState) // watering at night time
   {
     logWatering("reason: lamp is on");
     return;
@@ -358,13 +341,14 @@ void checkStartWatering(Readings *r)
     return;
   }
 
-  switchWatering(true);
+  r->wateringState = true;
+  switchWatering(r->wateringState);
   wateringStartTime = r->dt;
 }
 
 void checkWatering(Readings *r)
 {
-  if (wateringState)
+  if (r->wateringState)
     checkStopWatering(r);
   else
     checkStartWatering(r);
