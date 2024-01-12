@@ -1,19 +1,11 @@
-import sys
-import threading
 from http.server import BaseHTTPRequestHandler
 from http.server import HTTPServer
 import json
 import psycopg2
 from datetime import datetime
-import win32serviceutil
-import win32service
-import win32event
-import servicemanager
-import socket
-import time
 
 conn = psycopg2.connect(database="growbox",
-                        host="localhost",
+                        host="192.168.1.10",
                         user="postgres",
                         password="123",
                         port="5432")
@@ -56,7 +48,27 @@ class HttpGrowBoxHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write('<html><head><meta charset="utf-8">'.encode())
         self.wfile.write('<title>Growbox HTTP server</title></head>'.encode())
-        self.wfile.write('<body>Был получен GET-запрос.</body></html>'.encode())
+
+        body = ''
+        try:
+            sql = 'select dt, lamp_state, lamp_mode, watering_state, temperature, humidity, soil_humidity, (select dt from readings r1 where watering_state = 1 order by idr desc limit 1) as last_watering from readings order by idr desc limit 1'
+            print(sql)
+
+            cur = conn.cursor()
+            cur.execute(sql)
+            col_names = [desc[0] for desc in cur.description]
+            values = cur.fetchone()
+            for i in range(len(col_names)):
+                body += '<p>' + col_names[i] + ' = ' + str(values[i]) + '</p>\r\n'
+
+            body = '<h3>Growbox parameters</h3>' + body
+            print(body)
+
+        except Exception as e:
+            body = e.args[0]
+            pass
+
+        self.wfile.write(('<body>' + body + '</body></html>').encode())
 
     def do_POST(self):
         responce_code = 200
