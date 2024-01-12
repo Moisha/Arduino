@@ -89,7 +89,8 @@ class HttpGrowBoxHandler(BaseHTTPRequestHandler):
 
     def get_writePlot(self):
         sql = (
-                    'select dt, lamp_state * 100 as lamp_state, watering_state * 95 + 2 as watering_state, temperature, humidity, soil_humidity' +
+                    'select dt, lamp_state * 9 as lamp_state, watering_state * 9 + 10 as watering_state, temperature, humidity, ' +
+                    '       case when soil_humidity > 100 or soil_humidity < 0 then null else soil_humidity end as soil_humidity' +
                     '  from readings order by idr desc limit 1000')
 
         conn = connectPg()
@@ -109,6 +110,7 @@ class HttpGrowBoxHandler(BaseHTTPRequestHandler):
 
             dates_fmt = mdates.DateFormatter('%d.%M %H:%m')
             ax.xaxis.set_major_formatter(dates_fmt)
+            plt.grid(True, axis='y')
 
             ax.legend()
             fig.savefig(self.wfile, format='png')
