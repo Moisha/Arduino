@@ -80,7 +80,7 @@ class HttpGrowBoxHandler(BaseHTTPRequestHandler):
             saveToPg(post_body)
         except Exception as e:
             responce_code = 500
-            responce_text = e
+            responce_text = e.args[0]
             pass
 
         self.send_response(responce_code)
