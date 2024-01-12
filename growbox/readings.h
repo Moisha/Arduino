@@ -70,7 +70,7 @@ class Readings
     if (!isnan(humidity))
       res += formatForJSON("humidity", floatToStr(humidity));
 
-    if (!isnan(soilHumidity))
+    if (!isnan(soilHumidity) && soilHumidity >= 0 && soilHumidity <= 100)
       res += formatForJSON("soilHumidity", floatToStr(soilHumidity));
 
     res = res.substring(0, res.length() - 2) + "\n"; // уберем запятую в конце

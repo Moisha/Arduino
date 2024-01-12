@@ -23,6 +23,9 @@ RTC_DS1307 rtc; // real time clock
 LiquidCrystal_I2C lcd(0x27, 16, 2); // display
 
 int displayMode = 0;
+int lampRelayState = 0;
+int lampMode = 0;
+int wateringState = 0;
 
 uint32_t wateringLastTime = 0;
 uint32_t wateringStartTime = 0;
@@ -273,6 +276,7 @@ void switchLamp(bool v)
     Serial.println(v);    
   #endif
 
+  lampRelayState = v;
   digitalWrite(LAMP_PIN, v ? LOW : HIGH);  
 }
 
@@ -280,13 +284,12 @@ void checkLampMode(Readings *r)
 {
   DateTime dt(r->dt);
 
-  r->lampMode = digitalRead(GROW_BEG_SHITCH_PIN); // read from switch
-  r->lampRelayState = dt.hour() >= lampDayStartHour[r->lampMode] && dt.hour() < lampNightStartHour[r->lampMode];
-  switchLamp(r->lampRelayState);
+  lampMode = digitalRead(GROW_BEG_SHITCH_PIN); // read from switch
+  switchLamp(dt.hour() >= lampDayStartHour[lampMode] && dt.hour() < lampNightStartHour[lampMode]);
 
   #ifdef LOG_LAMP_MODE  
     Serial.print("lampMode ");
-    Serial.println(r->lampMode);    
+    Serial.println(lampMode);    
   #endif
 }
 
@@ -295,6 +298,7 @@ void switchWatering(bool v)
   logWatering("switchWatering ", false);
   logWatering(v);
 
+  wateringState = v;
   digitalWrite(WATER_PIN, v ? LOW : HIGH);  
 }
 
@@ -313,8 +317,7 @@ void checkStopWatering(Readings *r)
 
   if (wateringDurationSeconds >= wateringDurationLimitSeconds)
   {
-    r->wateringState = false;
-    switchWatering(r->wateringState);
+    switchWatering(false);
     wateringStartTime = 0;
     wateringLastTime = r->dt;    
   }  
@@ -330,6 +333,10 @@ void checkStartWatering(Readings *r)
     return;
   }
 
+  DateTime dtWateringLastTime(wateringLastTime); 
+  logWatering("wateringLastTime = ", false);
+  logWatering(dtWateringLastTime.timestamp());
+
   int secondsFromLastWatering = r->dt - wateringLastTime;
   logWatering("secondsFromLastWatering = ", false);
   logWatering(secondsFromLastWatering);
@@ -341,14 +348,16 @@ void checkStartWatering(Readings *r)
     return;
   }
 
-  r->wateringState = true;
-  switchWatering(r->wateringState);
+  switchWatering(true);
   wateringStartTime = r->dt;
 }
 
 void checkWatering(Readings *r)
 {
-  if (r->wateringState)
+  logWatering("wateringState = ", false);
+  logWatering(wateringState);
+
+  if (wateringState)
     checkStopWatering(r);
   else
     checkStartWatering(r);
@@ -357,6 +366,13 @@ void checkWatering(Readings *r)
 void initGrowVerSwitch()
 {
   pinMode(GROW_BEG_SHITCH_PIN, INPUT);
+}
+
+void updateGlobalVars(Readings *r)
+{
+  r->lampRelayState = lampRelayState;
+  r->wateringState = wateringState;
+  r->lampMode = lampMode;
 }
 
 void setup() {
@@ -385,8 +401,9 @@ void loop()
   checkLampMode(r);
   checkWatering(r);
   
-  displayValues(r);
+  updateGlobalVars(r);
 
+  displayValues(r);
   postData(r);
 
   delay(3000);
