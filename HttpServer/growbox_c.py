@@ -3,6 +3,12 @@ from http.server import HTTPServer
 import json
 import psycopg2
 from datetime import datetime
+import numpy
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+import io
+from PIL import Image
+
 
 
 def connectPg():
@@ -73,17 +79,55 @@ class HttpGrowBoxHandler(BaseHTTPRequestHandler):
 
         except Exception as e:
             body = e.args[0]
-            pass
 
         return body
 
-    def do_GET(self):
-        self.send_response(200)
-        self.send_header("Content-type", "text/html")
-        self.end_headers()
+    def get_writeValues(self):
         self.wfile.write('<html><head><meta charset="utf-8">'.encode())
         self.wfile.write('<title>Growbox HTTP server</title></head>'.encode())
         self.wfile.write(('<body>' + self.getInfoBody() + '</body></html>').encode())
+
+    def get_writePlot(self):
+        sql = (
+                    'select dt, lamp_state * 100 as lamp_state, watering_state * 95 + 2 as watering_state, temperature, humidity, soil_humidity' +
+                    '  from readings order by idr desc limit 1000')
+
+        conn = connectPg()
+        try:
+            cur = conn.cursor()
+            cur.execute(sql)
+
+            col_names = [desc[0] for desc in cur.description]
+            values = numpy.array(list(cur.fetchall()))
+            colors = ['k', 'c', 'r', 'b', 'g']
+
+            fig, ax = plt.subplots(figsize=(20, 10))
+            ax.set_title("Growbox")
+            for i in range(5):
+                ax.plot(values[:, 0], values[:, i + 1], label=col_names[i + 1],
+                        color=colors[i])  # Plot some data on the axes.
+
+            dates_fmt = mdates.DateFormatter('%d.%M %H:%m')
+            ax.xaxis.set_major_formatter(dates_fmt)
+
+            ax.legend()
+            fig.savefig(self.wfile, format='png')
+        except:
+            pass
+
+
+    def get_isPlot(self):
+        return self.path == '/plot'
+
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header("Content-type", "image/png" if self.get_isPlot() else "text/html")
+        self.end_headers()
+        if (self.get_isPlot()):
+            self.get_writePlot()
+        else:
+            self.get_writeValues()
+
 
     def do_POST(self):
         response_code = 200
@@ -96,7 +140,6 @@ class HttpGrowBoxHandler(BaseHTTPRequestHandler):
         except Exception as e:
             response_code = 500
             response_text = e.args[0]
-            pass
 
         self.send_response(response_code)
         self.send_header("Content-type", "text/plain")
