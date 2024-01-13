@@ -137,11 +137,14 @@ void readRTC(Readings *r)
 
 void readSoil(Readings *r)
 {
-  int soilHumiditiSensorMin = 960;                    // Определяем минимальное показание датчика (в воздухе),
-  int soilHumiditiSensorMax = 655;      
-
   int sh = analogRead(SOIL_PIN);             // Читаем сырые данные с датчика,
   r->soilHumidity = map(sh, soilHumiditiSensorMin, soilHumiditiSensorMax, 0, 100);  // адаптируем значения от 0 до 100
+  if (r->soilHumidity > 100 && r->soilHumidity < 120)
+    r->soilHumidity = 100;
+
+  if (r->soilHumidity < 0 && r->soilHumidity > -20)
+    r->soilHumidity = 0;
+
   #ifdef LOG_DHT
     Serial.printf("Soil Hymidity %d / %f", sh, r->soilHumidity);
     Serial.println(r->humidity);
@@ -327,7 +330,7 @@ void checkStartWatering(Readings *r)
 {
   logWatering("checkStartWatering");
 
-  if (r->lampRelayState) // watering at night time
+  if (lampRelayState) // watering at night time
   {
     logWatering("reason: lamp is on");
     return;
