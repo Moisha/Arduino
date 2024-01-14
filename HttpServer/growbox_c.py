@@ -8,16 +8,7 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import io
 from PIL import Image
-
-
-
-def connectPg():
-    return psycopg2.connect(database="growbox",
-                            host="192.168.1.10",
-                            user="postgres",
-                            password="123",
-                            port="5432")
-
+from sql import *
 
 def dtToPgString(unix_dt):
     dt = datetime.utcfromtimestamp(int(unix_dt))
@@ -57,30 +48,7 @@ def saveToPg(post_body):
 
 class HttpGrowBoxHandler(BaseHTTPRequestHandler):
     def getInfoBody(self):
-        body = '<h3>Growbox parameters</h3>'
-        try:
-            sql = ('select dt, lamp_state, lamp_mode, watering_state, temperature, humidity, soil_humidity,' +
-                   '       (select dt from readings r1 where watering_state = 1 order by idr desc limit 1) as last_watering ' +
-                   '  from readings order by idr desc limit 1')
-            print(sql)
-
-            conn = connectPg()
-            try:
-                cur = conn.cursor()
-                cur.execute(sql)
-                col_names = [desc[0] for desc in cur.description]
-                values = cur.fetchone()
-                for i in range(len(col_names)):
-                    body += '<p>' + col_names[i] + ' = ' + str(values[i]) + '</p>\r\n'
-
-                print(body)
-            finally:
-                conn.close()
-
-        except Exception as e:
-            body = e.args[0]
-
-        return body
+        return get_info_text(True)
 
     def get_writeValues(self):
         self.wfile.write('<html><head><meta charset="utf-8">'.encode())
@@ -88,35 +56,7 @@ class HttpGrowBoxHandler(BaseHTTPRequestHandler):
         self.wfile.write(('<body>' + self.getInfoBody() + '</body></html>').encode())
 
     def get_writePlot(self):
-        sql = (
-                    'select dt, lamp_state * 9 as lamp_state, watering_state * 9 + 10 as watering_state, temperature, humidity, ' +
-                    '       case when soil_humidity > 100 or soil_humidity < 0 then null else soil_humidity end as soil_humidity' +
-                    '  from readings order by idr desc limit 1000')
-
-        conn = connectPg()
-        try:
-            cur = conn.cursor()
-            cur.execute(sql)
-
-            col_names = [desc[0] for desc in cur.description]
-            values = numpy.array(list(cur.fetchall()))
-            colors = ['k', 'c', 'r', 'b', 'g']
-
-            fig, ax = plt.subplots(figsize=(20, 10))
-            ax.set_title("Growbox")
-            for i in range(5):
-                ax.plot(values[:, 0], values[:, i + 1], label=col_names[i + 1],
-                        color=colors[i])  # Plot some data on the axes.
-
-            dates_fmt = mdates.DateFormatter('%d.%M %H:%m')
-            ax.xaxis.set_major_formatter(dates_fmt)
-            plt.grid(True, axis='y')
-
-            ax.legend()
-            fig.savefig(self.wfile, format='png')
-        except:
-            pass
-
+        write_plot_to_iobytes(self.wfile, 20, 10)
 
     def get_isPlot(self):
         return self.path == '/plot'
