@@ -124,7 +124,7 @@ void readSoil(Readings *r)
 {
   r->setSoilHumidityRaw(analogRead(SOIL_PIN)); // Читаем сырые данные с датчика,
   #ifdef LOG_DHT
-    Serial.printf("Soil Hymidity %f / %f",  r->soilHumidityRaw, r->soilHumidity);
+    Serial.printf("Soil Hymidity %f / %f",  round(r->soilHumidityRaw), round(r->soilHumidity));
     Serial.println(r->humidity);
   #endif  
 }

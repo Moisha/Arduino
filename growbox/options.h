@@ -24,7 +24,7 @@ int lampDayStartHour[2] = {2, 8};
 const float dailyWateringVolume = 100; // тип обязательно float, чтобы не попасть на целочисленное деление
 const float wateringPerMinute = 125;
 
-int soilHumiditiSensorMin = 970;                    // Определяем минимальное показание датчика (в воздухе),
-int soilHumiditiSensorMax = 680;     
+int soilHumiditiSensorMin = 740;                    // Определяем минимальное показание датчика (в воздухе),
+int soilHumiditiSensorMax = 510;     
 
 #endif

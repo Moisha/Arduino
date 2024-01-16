@@ -52,7 +52,11 @@ void displaySoil(Readings *r)
   if (isnan(r->soilHumidity))
     lcd.print("---");
   else
-    lcd.print(r->soilHumidity);
+  {
+    lcd.print((int)r->soilHumidityRaw);
+    lcd.print(" / ");
+    lcd.print((int)r->soilHumidity);
+  }
 
   lcd.print(LCD_FILLER);
 
@@ -69,10 +73,20 @@ void displayLamp(Readings *r)
   lcd.print("M: ");
   switch (r->lampMode)
   {
-    case 0: lcd.print("Veg");
-    case 1: lcd.print("Bloom");
-    case 2: lcd.print("On");
-    case 3: lcd.print("Off");
+    case 0: 
+      lcd.print("Veg");
+      break;
+    case 1: 
+      lcd.print("Bloom");
+      break;
+    case 2: 
+      lcd.print("On");
+      break;
+    case 3: 
+      lcd.print("Off");
+      break;
+    default:
+      break;
   }
 
   lcd.print(", R: ");
