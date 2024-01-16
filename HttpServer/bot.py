@@ -13,6 +13,7 @@ def start_message(message):
 def data(message):
     contents = get_info_text(False)
     bot.send_message(message.chat.id, contents)
+    plot(message)
 
 
 @bot.message_handler(commands=['plot'])

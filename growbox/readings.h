@@ -15,9 +15,11 @@ class Readings
     float temperature;
     float humidity;
     float soilHumidity;
-    int lampMode; // 0 - grow, 1 - veg
+    float soilHumidityRaw;
+    int lampMode; // 0 - veg, 1 - bloom, 2 - on, 3 - off
     bool lampRelayState;
     bool wateringState;
+    uint32_t wateringLastTime;
 
   Readings() 
   { 
@@ -30,9 +32,11 @@ class Readings
     temperature = NAN;
     humidity = NAN;
     soilHumidity = NAN;
+    soilHumidityRaw = NAN;
     lampMode = 0;
     lampRelayState = false;
     wateringState = false;
+    wateringLastTime = 0;
   }
 
   void assign(Readings *source)
@@ -41,9 +45,22 @@ class Readings
     temperature = source->temperature;
     humidity = source->humidity;
     soilHumidity = source->soilHumidity;    
+    soilHumidityRaw = source->soilHumidityRaw;    
     lampMode = source->lampMode;
     lampRelayState = source->lampRelayState;
     wateringState = source->wateringState;
+    wateringLastTime = source->wateringLastTime;
+  }
+
+  void setSoilHumidityRaw(float shr)
+  {
+    soilHumidityRaw = shr;             // Читаем сырые данные с датчика,
+    soilHumidity = map(soilHumidityRaw, soilHumiditiSensorMin, soilHumiditiSensorMax, 0, 100);  // адаптируем значения от 0 до 100
+    if (soilHumidity > 100 && soilHumidity < 120)
+      soilHumidity = 100;
+
+    if (soilHumidity < 0 && soilHumidity > -20)
+      soilHumidity = 0;    
   }
 
   String formatForJSON(String name, String val)
@@ -57,12 +74,15 @@ class Readings
       return "";
 
     DateTime forStr(dt);
+    DateTime dtWateringLastTime(wateringLastTime);
+
     String res = "{\r\n" +
       formatForJSON("dtStr", forStr.timestamp()) +
       formatForJSON("dt", String(dt)) + 
       formatForJSON("lampMode", String((int)lampMode)) + 
       formatForJSON("lampState", String((int)lampRelayState)) +
-      formatForJSON("wateringState", String((int)wateringState));
+      formatForJSON("wateringState", String((int)wateringState)) +
+      formatForJSON("wateringLastTime", dtWateringLastTime.timestamp());
 
     if (!isnan(temperature))
       res += formatForJSON("temperature", floatToStr(temperature));
@@ -73,6 +93,9 @@ class Readings
     if (!isnan(soilHumidity) && soilHumidity >= 0 && soilHumidity <= 100)
       res += formatForJSON("soilHumidity", floatToStr(soilHumidity));
 
+    if (!isnan(soilHumidityRaw))
+      res += formatForJSON("soilHumidityRaw", floatToStr(soilHumidityRaw));
+
     res = res.substring(0, res.length() - 2) + "\n"; // уберем запятую в конце
 
     res += "}";
@@ -80,6 +103,12 @@ class Readings
     return res;
   }
 };
+
+void initReadings()
+{ 
+  for (int i = 0; i < READINGS_ARCHIVE_LENGTH; i++)
+    readingsArchive[i] = new Readings();
+}
 
 Readings* prepareReadings()
 {

@@ -1,6 +1,8 @@
+#ifndef growbox_wifi_h
+#define growbox_wifi_h
+
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
-#include <Arduino.h>
 #include "options.h"
 #include "readings.h"
 
@@ -160,3 +162,5 @@ void scanWiFi()
   }
   Serial.println("");
 }
+
+#endif

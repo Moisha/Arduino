@@ -34,11 +34,16 @@ def saveToPg(post_body):
         fields += ['soil_humidity']
         values += [props['soilHumidity']]
 
+    if 'soilHumidityRaw' in props:
+        fields += ['soil_humidity_raw']
+        values += [props['soilHumidityRaw']]
+
     field_list = ", ".join(fields)
+    value_list = ", ".join(values)
 
     conn = connectPg()
     try:
-        sql = 'insert into readings (' + field_list + ') select ' + ", ".join(values)
+        sql = 'insert into readings (' + field_list + ') select ' + value_list
         cur = conn.cursor()
         cur.execute(sql)
         conn.commit()

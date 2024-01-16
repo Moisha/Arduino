@@ -1,7 +1,6 @@
 #ifndef growbox_options_h
 #define growbox_options_h
 
-#define RTC_CONNECTED 
 // #define RTC_UPDATE_TIME // использовать один раз для инициализации модуля времени. В боевом режиме закомментарить обязательно!!!
 
 #define LOG_TIME
@@ -11,7 +10,7 @@
 #define LOG_HTTP
 
 int lampNightStartHour[2] = {22, 20};
-int lampDayStartHour[2] = {3, 8};
+int lampDayStartHour[2] = {2, 8};
 
 #define READINGS_ARCHIVE_LENGTH 100
 

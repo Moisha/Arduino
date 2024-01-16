@@ -7,6 +7,7 @@
 #include "wifi.h"
 #include "readings.h"
 #include "options.h"
+#include "display.h"
 
 #define DHTTYPE DHT22     // DHT 22 (AM2302)
 #define DHTPIN D5
@@ -16,15 +17,11 @@
 #define WATER_PIN D6
 #define GROW_BEG_SHITCH_PIN D7
 
-#define LCD_FILLER "                "
-
 DHT dht(DHTPIN, DHTTYPE); // temp and hum
 RTC_DS1307 rtc; // real time clock
-LiquidCrystal_I2C lcd(0x27, 16, 2); // display
 
-int displayMode = 0;
 int lampRelayState = 0;
-int lampMode = 0;
+int lampMode = 0; // 0 - veg, 1 - bloom, 2 - on, 3 - off
 int wateringState = 0;
 
 uint32_t wateringLastTime = 0;
@@ -41,30 +38,20 @@ void initRelays()
   Serial.println("initRelays done");
 }
 
-void initDisplay()
-{
-  Wire.begin(D2, D1);
-  lcd.begin(D2, D1);
-
-  lcd.clear();         
-  lcd.backlight();      // Make sure backlight is on  
-
-  lcd.setCursor(0, 0);  
-}
-
 void initRTC()
 {
-  #ifdef RTC_CONNECTED
-    Serial.println("initRTC");
-    if (!rtc.begin()) 
-      Serial.println("Couldn't find RTC");
-    else
-      Serial.println("RTC found");
+  Serial.println("initRTC");
+  if (!rtc.begin()) 
+  {
+    Serial.println("Couldn't find RTC");
+    return;
+  }
 
-    #ifdef RTC_UPDATE_TIME
-      // sets the RTC to the date & time on PC this sketch was compiled
-      rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
-    #endif
+  Serial.println("RTC found");
+
+  #ifdef RTC_UPDATE_TIME
+    // sets the RTC to the date & time on PC this sketch was compiled
+    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
   #endif
 }
 
@@ -121,32 +108,23 @@ void readDHT(Readings *r)
 
 void readRTC(Readings *r)
 {
-  #ifdef RTC_CONNECTED
-    #ifdef LOG_TIME
-      Serial.println("reading RTC");
-    #endif
+  #ifdef LOG_TIME
+    Serial.println("reading RTC");
+  #endif
 
-    DateTime dt = rtc.now();
-    r->dt = dt.unixtime();
+  DateTime dt = rtc.now();
+  r->dt = dt.unixtime();
 
-    #ifdef LOG_TIME
-      Serial.println(dt.timestamp());
-    #endif
+  #ifdef LOG_TIME
+    Serial.println(dt.timestamp());
   #endif
 }
 
 void readSoil(Readings *r)
 {
-  int sh = analogRead(SOIL_PIN);             // Читаем сырые данные с датчика,
-  r->soilHumidity = map(sh, soilHumiditiSensorMin, soilHumiditiSensorMax, 0, 100);  // адаптируем значения от 0 до 100
-  if (r->soilHumidity > 100 && r->soilHumidity < 120)
-    r->soilHumidity = 100;
-
-  if (r->soilHumidity < 0 && r->soilHumidity > -20)
-    r->soilHumidity = 0;
-
+  r->setSoilHumidityRaw(analogRead(SOIL_PIN)); // Читаем сырые данные с датчика,
   #ifdef LOG_DHT
-    Serial.printf("Soil Hymidity %d / %f", sh, r->soilHumidity);
+    Serial.printf("Soil Hymidity %f / %f",  r->soilHumidityRaw, r->soilHumidity);
     Serial.println(r->humidity);
   #endif  
 }
@@ -162,114 +140,6 @@ void initSerial()
 {
   Serial.begin(115200); 
   Serial.println("Startup");
-}
-
-void initReadings()
-{ 
-  for (int i = 0; i < READINGS_ARCHIVE_LENGTH; i++)
-    readingsArchive[i] = new Readings();
-}
-
-void lcdFirstLine()
-{
-  lcd.setCursor(0, 0);    
-}
-
-void lcdSecondLine()
-{
-  lcd.setCursor(0, 1);    
-}
-
-void displayDt(Readings *r)
-{
-  DateTime dt(r->dt);
-
-  lcdFirstLine();  
-  lcd.print(dt.timestamp(DateTime::TIMESTAMP_TIME));    
-  lcd.print(" R:");
-  lcd.print(rtc.isrunning());    
-  lcd.print(LCD_FILLER);
-
-  lcdSecondLine();  
-  lcd.printf("Mem: ");
-  lcd.print(ESP.getFreeHeap());
-  lcd.print(LCD_FILLER);
-}
-
-void displayTH(Readings *r)
-{
-  lcdFirstLine();  
-  lcd.printf("T: ");
-  lcd.print(r->temperature);    
-  lcd.print(LCD_FILLER);
-
-  lcdSecondLine();  
-  lcd.printf("H: ");
-  lcd.print(r->humidity);
-  lcd.print(LCD_FILLER);  
-}
-
-void displaySoil(Readings *r)
-{
-  lcdFirstLine();  
-  lcd.print("Soil H: ");
-  if (isnan(r->soilHumidity))
-    lcd.print("---");
-  else
-    lcd.print(r->soilHumidity);
-
-  lcd.print(LCD_FILLER);
-
-  DateTime lastWatering(wateringLastTime);
-  lcdSecondLine();  
-  lcd.print("W: ");
-  lcd.printf("%02d.%02d %02d:%02d", lastWatering.day(), lastWatering.month(), lastWatering.hour(), lastWatering.minute());
-  lcd.print(LCD_FILLER);
-}
-
-void displayLamp(Readings *r)
-{
-  lcdFirstLine();  
-  lcd.print("M: ");
-  lcd.print(r->lampMode ? "Veg" : "Grow");
-  lcd.print(", R: ");
-  lcd.print(r->lampRelayState);
-  lcd.print(LCD_FILLER);
-
-  lcdSecondLine();  
-  lcd.print("D: ");
-  lcd.print(lampDayStartHour[r->lampMode]);
-  lcd.print(", N: ");
-  lcd.print(lampNightStartHour[r->lampMode]);
-  lcd.print(LCD_FILLER);  
-}
-
-void displayValues(Readings *r)
-{
-  switch (displayMode)
-  {
-    case 0:
-      displayDt(r);
-      break;
-
-    case 1:
-      displayTH(r);
-      break;
-
-    case 2:
-      displayLamp(r);
-      break;
-    
-    case 3:
-      displaySoil(r);
-      break;
-
-    default:
-      break;
-  }
-
-  displayMode++;
-  displayMode %= 4;
 }
 
 void switchLamp(bool v)
@@ -376,6 +246,7 @@ void updateGlobalVars(Readings *r)
   r->lampRelayState = lampRelayState;
   r->wateringState = wateringState;
   r->lampMode = lampMode;
+  r->wateringLastTime = wateringLastTime;
 }
 
 void setup() {
