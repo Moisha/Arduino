@@ -25,7 +25,8 @@ def get_info_text(for_html):
     body = h1 + 'Growbox parameters' + h2 + '\r\n'
     try:
         sql = ('select dt, lamp_state, lamp_mode, watering_state, temperature, humidity, soil_humidity, soil_humidity_raw,' +
-               '       (select dt from readings r1 where watering_state = 1 order by idr desc limit 1) as last_watering ' +
+               '       (select dt from readings r1 where dt > CURRENT_DATE - INTERVAL \'3 days\' and watering_state = 1 order by idr desc limit 1) as last_watering ' +
+               '  where dt > CURRENT_DATE - INTERVAL \'3 days\' ' +
                '  from readings order by idr desc limit 1')
         print(sql)
 
