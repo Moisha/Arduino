@@ -22,9 +22,6 @@ def saveToPg(post_body):
     fields = ['raw_dt', 'dt', 'lamp_state', 'lamp_mode', 'watering_state']
     values = [props['dt'], dtToPgString(props['dt']), props['lampState'], props['lampMode'], props['wateringState']]
 
-    if props['dt'].year < 2024:
-        return
-
     if 'humidity' in props:
         fields += ['humidity']
         values += [props['humidity']]
@@ -47,6 +44,11 @@ def saveToPg(post_body):
     conn = connectPg()
     try:
         sql = 'insert into readings (' + field_list + ') select ' + value_list
+        cur = conn.cursor()
+        cur.execute(sql)
+        conn.commit()
+
+        sql = 'delete from readings where dt > CURRENT_DATE + INTERVAL \'1 days\' or dt < \'20140101\''
         cur = conn.cursor()
         cur.execute(sql)
         conn.commit()
