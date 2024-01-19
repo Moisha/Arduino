@@ -3,6 +3,7 @@
 
 #include "readings.h"
 #include "options.h"
+#include <LiquidCrystal_I2C.h>
 
 LiquidCrystal_I2C lcd(0x27, 16, 2); // display
 int displayMode = 0;

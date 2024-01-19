@@ -22,6 +22,9 @@ def saveToPg(post_body):
     fields = ['raw_dt', 'dt', 'lamp_state', 'lamp_mode', 'watering_state']
     values = [props['dt'], dtToPgString(props['dt']), props['lampState'], props['lampMode'], props['wateringState']]
 
+    if props['dt'].year < 2024:
+        return
+
     if 'humidity' in props:
         fields += ['humidity']
         values += [props['humidity']]

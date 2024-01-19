@@ -121,7 +121,10 @@ void postData(Readings *r)
     return;
 
   if (!postMeasurings(r))
+  {
+    WiFi.disconnect(true, true);
     return;
+  }
 
   lastWiFiExchangeReadings.assign(r);    
 }
