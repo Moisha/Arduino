@@ -9,6 +9,7 @@ bot = telebot.TeleBot('6431439137:AAGIWzBgIfrNWuMwWsTNuDk6o5E6x9dW7uo')
 def start_message(message):
     bot.send_message(message.chat.id, 'hello world')
 
+
 @bot.message_handler(commands=['data'])
 def data(message):
     contents = get_info_text(False)
@@ -22,6 +23,11 @@ def plot(message):
     write_plot_to_iobytes(image, 10, 5)
     image.seek(0, 0)
     bot.send_photo(message.chat.id, image)
+
+
+@bot.message_handler(func=lambda m: True)
+def echo_all(message):
+    pass
 
 
 bot.infinity_polling()

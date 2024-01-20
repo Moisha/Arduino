@@ -1,13 +1,5 @@
-from http.server import BaseHTTPRequestHandler
-from http.server import HTTPServer
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
-import psycopg2
-from datetime import datetime
-import numpy
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-import io
-from PIL import Image
 from sql import *
 
 def dtToPgString(unix_dt):
@@ -101,7 +93,7 @@ class HttpGrowBoxHandler(BaseHTTPRequestHandler):
 
 def run():
     server_address = ('', 9000)
-    httpd = HTTPServer(server_address, HttpGrowBoxHandler)
+    httpd = ThreadingHTTPServer(server_address, HttpGrowBoxHandler)
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
