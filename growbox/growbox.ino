@@ -83,7 +83,7 @@ void readDHT(Readings *r)
   }
 }
 
-void readRTC(Readings *r)
+bool readRTC(Readings *r)
 {
   #ifdef LOG_TIME
     Serial.println("reading RTC");
@@ -95,6 +95,8 @@ void readRTC(Readings *r)
   #ifdef LOG_TIME
     Serial.println(dt.timestamp());
   #endif
+
+  return dt.year() == 2024;
 }
 
 void readSoil(Readings *r)
@@ -245,19 +247,21 @@ void loop()
   Serial.println("go");
 
   Readings *r = prepareReadings();
+  // scanWiFi();
 
-  readRTC(r);
-  readDHT(r);
-  readSoil(r);
+  if (readRTC(r))
+  {
+    readDHT(r);
+    // readSoil(r);
 
-  checkLampMode(r);
-  checkWatering(r);
-  
-  updateGlobalVars(r);
+    checkLampMode(r);
+    checkWatering(r);
+    
+    updateGlobalVars(r);
 
-  displayValues(r);
-  postData(r);
+    displayValues(r);
+    postData(r);
+  }
 
   delay(3000);
-  yield();
 }

@@ -1,28 +1,32 @@
 #include <Arduino.h>
-#include <ESP8266WiFi.h>
 #include <Adafruit_Sensor.h>
 #include <DHT.h>
 #include <RTClib.h>
-#include "wifi.h"
+#include "growbox_wifi.h"
 #include "readings.h"
 #include "options.h"
 #include "display.h"
 #include "logging.h"
+#include <esp32-hal-log.h>
 
 #define DHTTYPE DHT22     // DHT 22 (AM2302)
-#define DHTPIN D5
 
 #define SOIL_PIN A0
-#define LAMP_PIN D3
-#define WATER_PIN D6
-#define GROW_BEG_SHITCH_PIN D7
+#define DHT_PIN T0
+#define LAMP_PIN T1
+#define WATER_PIN T2
+#define GROW_BLOOM_SHITCH_PIN T3
+#define HUMIDIFIER_PIN T4
+#define FAN_PIN T5
 
-DHT dht(DHTPIN, DHTTYPE); // temp and hum
+DHT dht(DHT_PIN, DHTTYPE); // temp and hum
 RTC_DS1307 rtc; // real time clock
 
 int lampRelayState = 0;
 int lampMode = 0; // 0 - veg, 1 - bloom, 2 - on, 3 - off
 int wateringState = 0;
+int humidifierState = 0;
+int fanState = 0;
 
 uint32_t wateringLastTime = 0;
 uint32_t wateringStartTime = 0;
@@ -31,9 +35,13 @@ void initRelays()
 {
   pinMode(LAMP_PIN, OUTPUT);
   pinMode(WATER_PIN, OUTPUT);
+  pinMode(HUMIDIFIER_PIN, OUTPUT);
+  pinMode(FAN_PIN, OUTPUT);
 
   switchLamp(false);
   switchWatering(false);
+  switchHimidifier(true);
+  switchFan(false);
 
   Serial.println("initRelays done");
 }
@@ -135,7 +143,7 @@ void checkLampMode(Readings *r)
 {
   DateTime dt(r->dt);
 
-  lampMode = digitalRead(GROW_BEG_SHITCH_PIN); // read from switch
+  lampMode = digitalRead(GROW_BLOOM_SHITCH_PIN); // read from switch
   switchLamp(dt.hour() >= lampDayStartHour[lampMode] && dt.hour() < lampNightStartHour[lampMode]);
 
   #ifdef LOG_LAMP_MODE  
@@ -150,6 +158,24 @@ void switchWatering(bool v)
   logWatering(v);
 
   wateringState = v;
+  digitalWrite(WATER_PIN, v ? LOW : HIGH);  
+}
+
+void switchHimidifier(bool v)
+{
+  logWatering("switchHimidifier ", false);
+  logWatering(v);
+
+  humidifierState = v;
+  digitalWrite(WATER_PIN, v ? LOW : HIGH);  
+}
+
+void switchFan(bool v)
+{
+  logWatering("switchFan ", false);
+  logWatering(v);
+
+  fanState = v;
   digitalWrite(WATER_PIN, v ? LOW : HIGH);  
 }
 
@@ -214,9 +240,10 @@ void checkWatering(Readings *r)
     checkStartWatering(r);
 }
 
-void initGrowVerSwitch()
+void initLampModeSwitch()
 {
-  pinMode(GROW_BEG_SHITCH_PIN, INPUT);
+  pinMode(GROW_BLOOM_SHITCH_PIN, INPUT);
+  Serial.println("Init Lamp Mode switch done");    
 }
 
 void updateGlobalVars(Readings *r)
@@ -227,22 +254,29 @@ void updateGlobalVars(Readings *r)
   r->wateringLastTime = wateringLastTime;
 }
 
+void initI2C()
+{
+  Wire.begin(GROWBOX_SDA, GROWBOX_SCL);
+}
+
 void setup() {
   delay(1000);  
 
   initReadings();
+  initI2C();
   initSerial(); 
   initDHT();
-  initRTC(); 
   initDisplay();
+  initRTC(); 
   initRelays();
-  initGrowVerSwitch();
+  initLampModeSwitch();
   initWiFi();  
 }
 
 void loop()
 {
   Serial.println("go");
+  // scanWiFi();
 
   Readings *r = prepareReadings();
 

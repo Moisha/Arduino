@@ -1,8 +1,8 @@
 #ifndef growbox_wifi_h
 #define growbox_wifi_h
 
-#include <ESP8266WiFi.h>
-#include <ESP8266HTTPClient.h>
+#include <WiFi.h>
+#include <HTTPClient.h>
 #include "options.h"
 #include "readings.h"
 
@@ -17,9 +17,22 @@ void LogWiFi(String s, bool ln = true)
   #endif
 }
 
+void LogWiFi(int val, bool ln = true)
+{
+  #ifdef LOG_HTTP
+    Serial.print(val);  
+    if (ln)
+      Serial.println();  
+  #endif
+}
+
 void initWiFi()
 {
+  LogWiFi("Init WiFi");
+  LogWiFi("WiFi getMode()");
+  LogWiFi(WiFi.getMode());
   WiFi.mode(WIFI_STA);
+  LogWiFi("Init WiFi done");
 }
 
 bool connectWiFi()
@@ -132,8 +145,10 @@ void postData(Readings *r)
 void scanWiFi()
 {
   Serial.println("Wifi scan started");
-
+  Serial.println(WiFi.status());
+  
   // WiFi.scanNetworks will return the number of networks found
+  Serial.println("Wifi scanNetworks");
   int n = WiFi.scanNetworks();
   Serial.println("Wifi scan ended");
   if (n == 0) {
@@ -152,13 +167,15 @@ void scanWiFi()
       Serial.print("dBm (");
       
       Serial.print(WiFi.RSSI(i));//Signal strength in %  
-     Serial.print("% )"); 
+      Serial.print("% )"); 
+/*
       if(WiFi.encryptionType(i) == ENC_TYPE_NONE)
       {
           Serial.println(" <<***OPEN***>>");        
       }else{
           Serial.println();        
       }
+*/      
 
       delay(10);
     }

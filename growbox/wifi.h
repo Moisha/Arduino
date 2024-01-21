@@ -33,7 +33,7 @@ bool connectWiFi()
 
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
-  int tries = 10; 
+  int tries = 20; 
   while (--tries && WiFi.status() != WL_CONNECTED) 
   {
     delay(500);

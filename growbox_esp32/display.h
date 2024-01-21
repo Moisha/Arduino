@@ -104,8 +104,7 @@ void displayLamp(Readings *r)
 
 void initDisplay()
 {
-  Wire.begin(D2, D1);
-  lcd.begin(D2, D1);
+  lcd.begin(GROWBOX_SDA, GROWBOX_SCL);
 
   lcd.clear();         
   lcd.backlight();      // Make sure backlight is on  
