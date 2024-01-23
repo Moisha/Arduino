@@ -48,12 +48,12 @@ def get_info_text(for_html):
     return body
 
 
-def write_plot_to_iobytes(wfile, len, height):
+def write_plot_to_iobytes(wfile, len, height, cnt=1000):
     sql = (
             'select dt, lamp_state * 9 as lamp_state, watering_state * 9 + 10 as watering_state, temperature, humidity, ' +
             '       case when soil_humidity > 100 or soil_humidity < 0 then null else soil_humidity end as soil_humidity' +
             '  from readings ' +
-            'order by idr desc limit 1000')
+            'order by idr desc limit ' + str(cnt))
 
     conn = connectPg()
     try:

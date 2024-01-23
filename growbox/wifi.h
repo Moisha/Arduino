@@ -17,6 +17,15 @@ void LogWiFi(String s, bool ln = true)
   #endif
 }
 
+void LogWiFi(int val, bool ln = true)
+{
+  #ifdef LOG_HTTP
+    Serial.print(val);  
+    if (ln)
+      Serial.println();  
+  #endif
+}
+
 void initWiFi()
 {
   WiFi.mode(WIFI_STA);
@@ -33,16 +42,18 @@ bool connectWiFi()
 
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
-  int tries = 20; 
+  int tries = 40; // 20 sec 
   while (--tries && WiFi.status() != WL_CONNECTED) 
   {
     delay(500);
     LogWiFi(".", false);
   }
 
-  if (WiFi.status() != WL_CONNECTED)
+  wl_status_t st = WiFi.status();
+  if (st != WL_CONNECTED)
   {
-    LogWiFi("Non Connecting to WiFi..");
+    LogWiFi("Non Connecting to WiFi..", false);
+    LogWiFi((int)st);
     return false;
   }
 
@@ -117,16 +128,19 @@ void postData(Readings *r)
   if (!needSend(r))
     return;
 
+  delay(1000); // Дадим секунду прийти в себя после общения с аналоговым входом
+
   if (!connectWiFi())
     return;
 
-  if (!postMeasurings(r))
-  {
-    WiFi.disconnect(true, true);
-    return;
-  }
+  for(int i = 0; i < 10; i++)
+    if (postMeasurings(r))
+    {      
+      lastWiFiExchangeReadings.assign(r);
+      return;
+    }
 
-  lastWiFiExchangeReadings.assign(r);    
+  WiFi.disconnect(true, true);
 }
 
 void scanWiFi()

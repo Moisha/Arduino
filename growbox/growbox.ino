@@ -252,7 +252,7 @@ void loop()
   if (readRTC(r))
   {
     readDHT(r);
-    // readSoil(r);
+    readSoil(r);
 
     checkLampMode(r);
     checkWatering(r);
