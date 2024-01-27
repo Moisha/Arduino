@@ -10,10 +10,11 @@
 #include "logging.h"
 
 #define DHTTYPE DHT22     // DHT 22 (AM2302)
-#define DHTPIN D5
 
 #define SOIL_PIN A0
 #define LAMP_PIN D3
+#define HUMIDIFIER_PIN D4
+#define DHTPIN D5
 #define WATER_PIN D6
 #define GROW_BEG_SHITCH_PIN D7
 
@@ -23,6 +24,7 @@ RTC_DS1307 rtc; // real time clock
 int lampRelayState = 0;
 int lampMode = 0; // 0 - veg, 1 - bloom, 2 - on, 3 - off
 int wateringState = 0;
+int humidifierState = 0;
 
 uint32_t wateringLastTime = 0;
 uint32_t wateringStartTime = 0;
@@ -31,11 +33,38 @@ void initRelays()
 {
   pinMode(LAMP_PIN, OUTPUT);
   pinMode(WATER_PIN, OUTPUT);
+  pinMode(HUMIDIFIER_PIN, OUTPUT);
 
   switchLamp(false);
   switchWatering(false);
+  switchHumidifier(true);
 
   Serial.println("initRelays done");
+}
+
+void checkInitialDT()
+{
+  // Время иногда возвращается загадочное. Поэтому поступим так. 
+  // Пять раз подряд считаем время с RTC. Если вся пять чтений пройдут подряд, то считаем, 
+  // что опорное время есть и от него оталкиваемся в верификации показаний RTC
+  bool res = false;
+  while (!res)
+  {
+    initReadings();
+    res = true;
+    for (int i = 0; i < 5; i++)
+    {
+      Readings *r = prepareReadings();
+      r->dt = rtc.now().unixtime();
+      if (i > 0)
+        if (r->dt < readingsArchive[1]->dt || r->dt - readingsArchive[1]->dt > 5)
+        {
+          res = false;
+          break;
+        }
+      delay(1000);      
+    }
+  }
 }
 
 void initRTC()
@@ -53,6 +82,8 @@ void initRTC()
     // sets the RTC to the date & time on PC this sketch was compiled
     rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
   #endif
+
+  checkInitialDT();
 }
 
 void readDHT(Readings *r)
@@ -96,7 +127,14 @@ bool readRTC(Readings *r)
     Serial.println(dt.timestamp());
   #endif
 
-  return dt.year() == 2024;
+
+  if (r->dt < readingsArchive[1]->dt || r->dt - readingsArchive[1]->dt > 600)
+  {
+    // цикл длился больше десяти минут, что вряд ли, или время пошло назад, что еще более вряд ли
+    r->dt = readingsArchive[1]->dt; // чтобы в седующий проверять расхождение с тем же временем
+    return false;
+  }
+  return true;
 }
 
 void readSoil(Readings *r)
@@ -122,6 +160,15 @@ void initSerial()
   Serial.println("Startup");
 }
 
+void switchHumidifier(bool v)
+{
+  logDHT("switchHumidifier ", false);
+  logDHT(v);
+
+  humidifierState = v;
+  digitalWrite(HUMIDIFIER_PIN, v ? LOW : HIGH);  
+}
+
 void switchLamp(bool v)
 {
   #ifdef LOG_LAMP_MODE  
@@ -133,17 +180,33 @@ void switchLamp(bool v)
   digitalWrite(LAMP_PIN, v ? LOW : HIGH);  
 }
 
+void checkHumidifier(Readings *r)
+{
+  if (isnan(r->humidity))
+    switchHumidifier(true);
+  else
+  if (r->humidity < MIN_HUMIDITY)
+    switchHumidifier(true);
+  else
+  if (r->humidity >= MAX_HUMIDITY)
+    switchHumidifier(false);
+  else
+  {
+    logDHT("humidifier ", false);
+    logDHT(humidifierState);
+  }
+}
+
 void checkLampMode(Readings *r)
 {
-  DateTime dt(r->dt);
-
   lampMode = digitalRead(GROW_BEG_SHITCH_PIN); // read from switch
-  switchLamp(dt.hour() >= lampDayStartHour[lampMode] && dt.hour() < lampNightStartHour[lampMode]);
-
   #ifdef LOG_LAMP_MODE  
     Serial.print("lampMode ");
     Serial.println(lampMode);    
   #endif
+
+  DateTime dt(r->dt);
+  switchLamp(dt.hour() >= lampDayStartHour[lampMode] && dt.hour() < lampNightStartHour[lampMode]);
 }
 
 void switchWatering(bool v)
@@ -227,6 +290,7 @@ void updateGlobalVars(Readings *r)
   r->wateringState = wateringState;
   r->lampMode = lampMode;
   r->wateringLastTime = wateringLastTime;
+  r->humidifierState = humidifierState;
 }
 
 void setup() {
@@ -243,8 +307,11 @@ void setup() {
 }
 
 void loop()
-{
-  Serial.println("go");
+{  
+  Serial.print("Sketch DT: ");
+  Serial.print(F(__DATE__));
+  Serial.print(" ");
+  Serial.println(F(__TIME__));
 
   Readings *r = prepareReadings();
   // scanWiFi();
@@ -256,11 +323,28 @@ void loop()
 
     checkLampMode(r);
     checkWatering(r);
+    checkHumidifier(r);
     
     updateGlobalVars(r);
 
     displayValues(r);
+
     postData(r);
+  /*
+    int humidifierStateTmp = humidifierState;
+    if (wifi_needSend(r))
+    {
+      // увлажнитель - злейший враг WiFi и АЦП. Поэтому выключим его и перечитаем значение из SOIL_PIN
+      switchHumidifier(false);
+      delay(3000);
+      readSoil(r);
+      delay(1000);
+      bool res = postData(r);
+      switchHumidifier(humidifierStateTmp);
+      if (!res && humidifierStateTmp)
+        delay(30 * 1000); // пусть поработает увлажнитель, пока мы не ушли на следующий цикл, где опять не факт, что соединимся  
+    }
+    */
   }
 
   delay(3000);

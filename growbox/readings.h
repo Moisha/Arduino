@@ -20,6 +20,7 @@ class Readings
     bool lampRelayState;
     bool wateringState;
     uint32_t wateringLastTime;
+    bool humidifierState;
 
   Readings() 
   { 
@@ -36,6 +37,7 @@ class Readings
     lampMode = 0;
     lampRelayState = false;
     wateringState = false;
+    humidifierState = false;
     wateringLastTime = 0;
   }
 
@@ -48,6 +50,7 @@ class Readings
     soilHumidityRaw = source->soilHumidityRaw;    
     lampMode = source->lampMode;
     lampRelayState = source->lampRelayState;
+    humidifierState = source->humidifierState;
     wateringState = source->wateringState;
     wateringLastTime = source->wateringLastTime;
   }
@@ -81,6 +84,7 @@ class Readings
       formatForJSON("dt", String(dt)) + 
       formatForJSON("lampMode", String((int)lampMode)) + 
       formatForJSON("lampState", String((int)lampRelayState)) +
+      formatForJSON("humidifierState", String((int)humidifierState)) +      
       formatForJSON("wateringState", String((int)wateringState)) +
       formatForJSON("wateringLastTime", dtWateringLastTime.timestamp());
 

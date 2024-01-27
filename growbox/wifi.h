@@ -39,7 +39,7 @@ bool connectWiFi()
     LogWiFi("WiFi connected");
     return true;
   }
-
+  
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
   int tries = 40; // 20 sec 
@@ -69,7 +69,7 @@ bool checkHttpResponceCode(HTTPClient &http, int httpCode)
   if (httpCode <= 0)
   {
     LogWiFi("[HTTP] POST... failed, error: ", false);
-    LogWiFi(http.errorToString(httpCode).c_str());
+    LogWiFi(http.errorToString(httpCode));
     return false;
   }  
   
@@ -88,17 +88,15 @@ void logHttpResponce(HTTPClient &http)
   LogWiFi(">>");
 }
 
-bool postMeasurings(Readings *r)
+bool doPostMeasurings(String url, String json)
 {
   WiFiClient wifiClient; 
   HTTPClient http;
 
-  LogWiFi("URL: " WIFI_POST_DATA_URL);
-  http.begin(wifiClient, WIFI_POST_DATA_URL);
+  LogWiFi("URL: ", false); 
+  LogWiFi(url);
+  http.begin(wifiClient, url);
   http.addHeader("Content-Type", "application/json");
-
-  String json = r->toJSON();
-  LogWiFi(json);
 
   int httpCode = http.POST(json);
   bool res = checkHttpResponceCode(http, httpCode);
@@ -109,12 +107,22 @@ bool postMeasurings(Readings *r)
   return res;
 }
 
-bool needSend(Readings *r)
+bool postMeasurings(Readings *r)
 {
-  bool res = r->dt - lastWiFiExchangeReadings.dt > ARCHIVE_TIME_SECONDS
+  String json = r->toJSON();
+  LogWiFi(json);
+
+  doPostMeasurings(WIFI_DIAGNOSTIC_DATA_URL, json);
+  return doPostMeasurings(WIFI_POST_DATA_URL, json);
+}
+
+bool wifi_needSend(Readings *r)
+{
+  bool res = r->dt - lastWiFiExchangeReadings.dt >= ARCHIVE_TIME_SECONDS
     || (r->lampMode != lastWiFiExchangeReadings.lampMode)
     || (r->lampRelayState != lastWiFiExchangeReadings.lampRelayState)
-    || (r->wateringState != lastWiFiExchangeReadings.wateringState);
+    || (r->wateringState != lastWiFiExchangeReadings.wateringState)
+    || (r->humidifierState != lastWiFiExchangeReadings.humidifierState);
 
   LogWiFi("WiFi: ", false);
   LogWiFi(res ? "Need send" : "No need send");
@@ -122,25 +130,20 @@ bool needSend(Readings *r)
   return res;
 }
 
-void postData(Readings *r)
+bool postData(Readings *r)
 {
   LogWiFi("WiFi: post data");
-  if (!needSend(r))
-    return;
-
-  delay(1000); // Дадим секунду прийти в себя после общения с аналоговым входом
+  if (!wifi_needSend(r))
+    return false;
 
   if (!connectWiFi())
-    return;
+    return false;
 
-  for(int i = 0; i < 10; i++)
-    if (postMeasurings(r))
-    {      
-      lastWiFiExchangeReadings.assign(r);
-      return;
-    }
+  if (!postMeasurings(r))
+    return false;
 
-  WiFi.disconnect(true, true);
+  lastWiFiExchangeReadings.assign(r);
+  return true;
 }
 
 void scanWiFi()

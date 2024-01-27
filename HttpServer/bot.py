@@ -11,10 +11,11 @@ bot = telebot.TeleBot('6431439137:AAGIWzBgIfrNWuMwWsTNuDk6o5E6x9dW7uo')
 def default_cnt(chat_id):
     return default_data_cnt.get(chat_id, default_data_cnt_for_all)
 
+
 def get_chat_cnt(message):
     args = message.text.split(' ')
-    if (len(args) > 1):
-        if (args[1].isdigit()):
+    if len(args) > 1:
+        if args[1].isdigit():
             return int(args[1])
 
     return default_cnt(message.chat.id)
@@ -38,6 +39,7 @@ def plot(message):
     write_plot_to_iobytes(image, 10, 5, get_chat_cnt(message))
     image.seek(0, 0)
     bot.send_photo(message.chat.id, image)
+
 
 @bot.message_handler(func=lambda msg: msg.text.startswith("/def"))
 def set_default_data_len(message):

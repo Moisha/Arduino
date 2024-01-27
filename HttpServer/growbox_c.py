@@ -11,8 +11,8 @@ def saveToPg(post_body):
     props = json.loads(post_body);
     # props = json.loads(b'{"dt": "1704899625",\r\n "dtStr": "2024-01-10T15:13:45", "lampMode": 0, "lampState": 1, "wateringState": 0, "soilHumidity": 315.0 }');
 
-    fields = ['raw_dt', 'dt', 'lamp_state', 'lamp_mode', 'watering_state']
-    values = [props['dt'], dtToPgString(props['dt']), props['lampState'], props['lampMode'], props['wateringState']]
+    fields = ['raw_dt', 'dt', 'lamp_state', 'lamp_mode', 'watering_state', 'humidifier_state']
+    values = [props['dt'], dtToPgString(props['dt']), props['lampState'], props['lampMode'], props['wateringState'], props['humidifierState']]
 
     if 'humidity' in props:
         fields += ['humidity']
@@ -35,12 +35,8 @@ def saveToPg(post_body):
 
     conn = connectPg()
     try:
-        sql = 'insert into readings (' + field_list + ') select ' + value_list
-        cur = conn.cursor()
-        cur.execute(sql)
-        conn.commit()
-
-        sql = 'delete from readings where dt > CURRENT_DATE + INTERVAL \'1 days\' or dt < \'20140101\''
+        sql = 'insert into readings (' + field_list + ', dt_server) ' +\
+              'select ' + value_list + ", '" + datetime.now().strftime('%Y%m%d %H:%M:%S') + "'"
         cur = conn.cursor()
         cur.execute(sql)
         conn.commit()

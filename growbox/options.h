@@ -21,6 +21,9 @@ int lampDayStartHour[2] = {2, 8};
 
 #define ARCHIVE_TIME_SECONDS 180
 
+#define MIN_HUMIDITY 45
+#define MAX_HUMIDITY 65
+
 const float dailyWateringVolume = 100; // тип обязательно float, чтобы не попасть на целочисленное деление
 const float wateringPerMinute = 125;
 
