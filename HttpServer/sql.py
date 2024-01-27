@@ -24,7 +24,7 @@ def get_info_text(for_html):
 
     body = h1 + 'Growbox parameters' + h2 + '\r\n'
     try:
-        sql = ('select dt, lamp_state, lamp_mode, watering_state, temperature, humidity, soil_humidity, soil_humidity_raw,' +
+        sql = ('select dt, lamp_state, lamp_mode, watering_state, temperature, humidity, soil_humidity, soil_humidity_raw, humidifier_state,' +
                '       (select dt from readings r1 where watering_state = 1 order by idr desc limit 1) as last_watering ' +
                '  from readings order by idr desc limit 1')
         print(sql)
@@ -50,8 +50,9 @@ def get_info_text(for_html):
 
 def write_plot_to_iobytes(wfile, len, height, cnt=1000):
     sql = (
-            'select dt, lamp_state * 9 as lamp_state, watering_state * 9 + 10 as watering_state, temperature, humidity, ' +
-            '       case when soil_humidity > 100 or soil_humidity < 0 then null else soil_humidity end as soil_humidity' +
+            'select dt, lamp_state * 9 - 10 as lamp_state, watering_state * 9 as watering_state, temperature, humidity, ' +
+            '       case when soil_humidity > 100 or soil_humidity < 0 then null else soil_humidity end as soil_humidity,' +
+            '       humidifier_state * 9 + 10 as humidifier_state' +
             '  from readings ' +
             'order by idr desc limit ' + str(cnt))
 
@@ -62,11 +63,11 @@ def write_plot_to_iobytes(wfile, len, height, cnt=1000):
 
         col_names = [desc[0] for desc in cur.description]
         values = numpy.array(list(cur.fetchall()))
-        colors = ['k', 'c', 'r', 'b', 'g']
+        colors = ['k', 'c', 'r', 'b', 'g', 'y']
 
         fig, ax = plt.subplots(figsize=(len, height))
         ax.set_title("Growbox")
-        for i in range(5):
+        for i in range(6):
             ax.plot(values[:, 0], values[:, i + 1], label=col_names[i + 1], color=colors[i])
 
         dates_fmt = mdates.DateFormatter('%d.%m %H:%M')
