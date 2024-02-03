@@ -49,11 +49,14 @@ def get_info_text(for_html):
 
 
 def write_plot_to_iobytes(wfile, len, height, cnt=1000, avg=1):
-    sql = f"select dt, lamp_state * 9 - 10 as lamp_state, watering_state * 9 as watering_state, temperature, humidity, " +\
+    sql = f"select * from (" +\
+          f"select dt_server, lamp_state * 9 - 10 as lamp_state, watering_state * 9 as watering_state, temperature, humidity, " +\
           f"       (select avg(soil_humidity) from readings r2 where r2.idr <= r1.idr and r2.idr > r1.idr - {avg} and soil_humidity <= 100 and soil_humidity >= 0) as soil_humidity," +\
           f"       humidifier_state * 9 + 10 as humidifier_state" +\
           f"  from readings r1" +\
-          f"  order by dt_server desc, idr desc limit {cnt}"
+          f"  order by idr desc limit {cnt}" +\
+          f"  ) t" +\
+          f"  order by 1 desc"
 
     conn = connectPg()
     try:
