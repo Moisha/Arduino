@@ -36,7 +36,7 @@ def data(message):
 @bot.message_handler(func=lambda msg: msg.text.startswith("/plot"))
 def plot(message):
     image = io.BytesIO()
-    write_plot_to_iobytes(image, 10, 5, get_chat_cnt(message))
+    write_plot_to_iobytes(image, 10, 5, get_chat_cnt(message), 10)
     image.seek(0, 0)
     bot.send_photo(message.chat.id, image)
 

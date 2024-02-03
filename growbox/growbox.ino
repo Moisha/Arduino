@@ -29,6 +29,8 @@ int humidifierState = 0;
 uint32_t wateringLastTime = 0;
 uint32_t wateringStartTime = 0;
 
+#define SECONDS_PER_HOUR 3600
+
 void initRelays()
 {
   pinMode(LAMP_PIN, OUTPUT);
@@ -256,9 +258,11 @@ void checkStartWatering(Readings *r)
   int secondsFromLastWatering = r->dt - wateringLastTime;
   logWatering("secondsFromLastWatering = ", false);
   logWatering(secondsFromLastWatering);
-  // полив раз в сутки, а больше 13 часов ночь не должна вроде быть
-  // Но и близкое к суткам время мы не можем указать, вдруг посреди ночи отключался свет и полив был не сразу после выключения лампы
-  if (secondsFromLastWatering < 13 * 3600) 
+  // полив раз в daysBetweenWatering суток, а больше 13 часов ночь не должна вроде быть
+  // но и близкое к суткам время мы не можем указать, вдруг посреди ночи отключался свет и полив был не сразу после выключения лампы
+  // поэтому возьмем в качестве временнОго зазора на полдня меньше, чем надо
+  int minSecondsBetweenWaterings = (daysBetweenWatering - 1) * SECONDS_PER_DAY + 13 * SECONDS_PER_HOUR;
+  if (secondsFromLastWatering < minSecondsBetweenWaterings) 
   {
     logWatering("reason: interval not passed");
     return;

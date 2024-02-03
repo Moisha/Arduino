@@ -7,6 +7,11 @@ def dtToPgString(unix_dt):
     return "'" + dt.strftime('%Y%m%d %H:%M:%S') + "'"
 
 
+def check_float_prop(val):
+    v = float(val)
+    return (v > 0) & (v < 100)
+
+
 def saveToPg(post_body):
     props = json.loads(post_body);
     # props = json.loads(b'{"dt": "1704899625",\r\n "dtStr": "2024-01-10T15:13:45", "lampMode": 0, "lampState": 1, "wateringState": 0, "soilHumidity": 315.0 }');
@@ -14,11 +19,11 @@ def saveToPg(post_body):
     fields = ['raw_dt', 'dt', 'lamp_state', 'lamp_mode', 'watering_state', 'humidifier_state']
     values = [props['dt'], dtToPgString(props['dt']), props['lampState'], props['lampMode'], props['wateringState'], props['humidifierState']]
 
-    if 'humidity' in props:
+    if ('humidity' in props) & check_float_prop(props['humidity']):
         fields += ['humidity']
         values += [props['humidity']]
 
-    if 'temperature' in props:
+    if ('temperature' in props) & check_float_prop(props['temperature']):
         fields += ['temperature']
         values += [props['temperature']]
 
