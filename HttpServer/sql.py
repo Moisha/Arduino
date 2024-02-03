@@ -75,7 +75,7 @@ def write_plot_to_iobytes(wfile, len, height, cnt=1000, avg=1):
 
         plt.grid(True, axis="y")
 
-        ax.legend()
+        ax.legend(loc='upper left')
         fig.savefig(wfile, format="png")
     except Exception as e:
         print(e.args[0])
