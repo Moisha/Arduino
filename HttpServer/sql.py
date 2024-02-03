@@ -53,7 +53,7 @@ def write_plot_to_iobytes(wfile, len, height, cnt=1000, avg=1):
           f"       (select avg(soil_humidity) from readings r2 where r2.idr <= r1.idr and r2.idr > r1.idr - {avg} and soil_humidity <= 100 and soil_humidity >= 0) as soil_humidity," +\
           f"       humidifier_state * 9 + 10 as humidifier_state" +\
           f"  from readings r1" +\
-          f"  order by idr desc limit {cnt}"
+          f"  order by dt_server desc, idr desc limit {cnt}"
 
     conn = connectPg()
     try:
