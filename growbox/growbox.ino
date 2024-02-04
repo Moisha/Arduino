@@ -13,9 +13,9 @@
 
 #define SOIL_PIN A0
 #define LAMP_PIN D3
-#define HUMIDIFIER_PIN D4
+#define HUMIDIFIER_PIN D6
 #define DHTPIN D5
-#define WATER_PIN D6
+#define WATER_PIN D4
 #define GROW_BEG_SHITCH_PIN D7
 
 DHT dht(DHTPIN, DHTTYPE); // temp and hum
@@ -102,11 +102,6 @@ void readDHT(Readings *r)
   else {
     logDHT("T=", false);
     logDHT(newT);
-    if (newT < 10 || newT > 50)
-    {
-      logDHT("Wrong temperature");
-      return;
-    }
       
     r->temperature = newT;
   }
@@ -124,6 +119,14 @@ void readDHT(Readings *r)
       logDHT("H=", false);
       logDHT(r->humidity);
   }
+
+  if (isnan(newT) || isnan(newH) || newT < 10 || newT > 50 || newH < 0 || newH > 100)
+  {
+    r->temperature = NAN;
+    r->humidity = NAN;
+    logDHT("Wrong temperature or humidity");
+    return;
+  }  
 }
 
 bool readRTC(Readings *r)
