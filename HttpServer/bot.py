@@ -5,7 +5,8 @@ from sql import *
 default_data_cnt_for_all = 500
 
 default_data_cnt = dict()
-bot = telebot.TeleBot('6431439137:AAGIWzBgIfrNWuMwWsTNuDk6o5E6x9dW7uo')
+key = open("key.txt").read()
+bot = telebot.TeleBot(key)
 
 
 def default_cnt(chat_id):
