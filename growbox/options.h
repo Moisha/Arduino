@@ -24,9 +24,9 @@ int lampDayStartHour[2] = {2, 8};
 #define MIN_HUMIDITY 50
 #define MAX_HUMIDITY 60
 
-const float dailyWateringVolume = 1500; // тип обязательно float, чтобы не попасть на целочисленное деление
-const int daysBetweenWatering = 3;
-const float wateringPerMinute = 125;
+const float dailyWateringVolume = 2000.0; // тип обязательно float, чтобы не попасть на целочисленное деление
+const int daysBetweenWatering = 1;
+const float wateringPerMinute = 125.0;
 
 const int soilHumiditiSensorMin = 970;                    // Определяем минимальное показание датчика (в воздухе),
 const int soilHumiditiSensorMax = 680;     

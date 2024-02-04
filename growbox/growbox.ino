@@ -46,6 +46,7 @@ void initRelays()
 
 void checkInitialDT()
 {
+  int lastGoodTime = 0;
   // Время иногда возвращается загадочное. Поэтому поступим так. 
   // Пять раз подряд считаем время с RTC. Если вся пять чтений пройдут подряд, то считаем, 
   // что опорное время есть и от него оталкиваемся в верификации показаний RTC
@@ -58,6 +59,7 @@ void checkInitialDT()
     {
       Readings *r = prepareReadings();
       r->dt = rtc.now().unixtime();
+      lastGoodTime = r->dt;
       if (i > 0)
         if (r->dt < readingsArchive[1]->dt || r->dt - readingsArchive[1]->dt > 5)
         {
@@ -67,6 +69,8 @@ void checkInitialDT()
       delay(1000);      
     }
   }
+
+  wateringLastTime = lastGoodTime;
 }
 
 void initRTC()
@@ -96,9 +100,15 @@ void readDHT(Readings *r)
     Serial.println("Failed to read from DHT sensor!");
   }
   else {
-    r->temperature = newT;
     logDHT("T=", false);
-    logDHT(r->temperature);
+    logDHT(newT);
+    if (newT < 10 || newT > 50)
+    {
+      logDHT("Wrong temperature");
+      return;
+    }
+      
+    r->temperature = newT;
   }
 
   // Read Humidity
@@ -184,19 +194,23 @@ void switchLamp(bool v)
 
 void checkHumidifier(Readings *r)
 {
-  if (isnan(r->humidity))
-    switchHumidifier(true);
-  else
-  if (r->humidity < MIN_HUMIDITY)
-    switchHumidifier(true);
-  else
-  if (r->humidity >= MAX_HUMIDITY)
-    switchHumidifier(false);
-  else
+  if (!isnan(r->humidity))
   {
-    logDHT("humidifier ", false);
-    logDHT(humidifierState);
+    if (r->humidity < MIN_HUMIDITY)
+    {
+      switchHumidifier(true);
+      return;
+    }
+    else
+    if (r->humidity >= MAX_HUMIDITY)
+    {
+      switchHumidifier(false);
+      return;
+    }
   }
+
+  logDHT("humidifier ", false);
+  logDHT(humidifierState);
 }
 
 void checkLampMode(Readings *r)

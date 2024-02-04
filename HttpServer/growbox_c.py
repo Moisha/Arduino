@@ -59,10 +59,15 @@ class HttpGrowBoxHandler(BaseHTTPRequestHandler):
         self.wfile.write(('<body>' + self.getInfoBody() + '</body></html>').encode())
 
     def get_writePlot(self):
-        write_plot_to_iobytes(self.wfile, 20, 10)
+        cnt = 1000
+        path_parts = self.path.split("/")
+        if len(path_parts) > 2 and path_parts[2].isnumeric():
+            cnt = int(path_parts[2])
+
+        write_plot_to_iobytes(self.wfile, 20, 10, cnt)
 
     def get_isPlot(self):
-        return self.path == '/plot'
+        return self.path.startswith('/plot')
 
     def do_GET(self):
         self.send_response(200)
