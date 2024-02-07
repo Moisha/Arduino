@@ -258,6 +258,43 @@ void checkStopWatering(Readings *r)
   }  
 }
 
+bool dayIsGoodForWatering(Readings *r)
+{
+  DateTime dtNow(r->dt);
+  DateTime nowDate(dtNow.year(), dtNow.month(), dtNow.day());
+  DateTime base(2024, 2, 7); // опорная дата для полива. Полили 07.02.2024, потом поливаем через день
+  TimeSpan diff = nowDate - base;
+  return diff.days() % 2 == 0;
+}
+
+bool wasWateringToday(Readings *r)
+{
+  DateTime dtWateringLastTime(wateringLastTime); 
+  logWatering("wateringLastTime = ", false);
+  logWatering(dtWateringLastTime.timestamp());
+
+/*
+  int secondsFromLastWatering = r->dt - wateringLastTime;
+  logWatering("secondsFromLastWatering = ", false);
+  logWatering(secondsFromLastWatering);
+  // полив раз в daysBetweenWatering суток, а больше 13 часов ночь не должна вроде быть
+  // но и близкое к суткам время мы не можем указать, вдруг посреди ночи отключался свет и полив был не сразу после выключения лампы
+  // поэтому возьмем в качестве временнОго зазора на полдня меньше, чем надо
+  int minSecondsBetweenWaterings = (daysBetweenWatering - 1) * SECONDS_PER_DAY + 13 * SECONDS_PER_HOUR;
+  if (secondsFromLastWatering < minSecondsBetweenWaterings) 
+  {
+    logWatering("reason: interval not passed");
+    return;
+  }
+*/
+
+  int secondsFromLastWatering = r->dt - wateringLastTime;
+  logWatering("secondsFromLastWatering = ", false);
+  logWatering(secondsFromLastWatering);
+  int minSecondsBetweenWaterings = SECONDS_PER_HOUR; // полива полчаса, возьмем с запасом
+  return secondsFromLastWatering < minSecondsBetweenWaterings;
+}
+
 void checkStartWatering(Readings *r)
 {
   logWatering("checkStartWatering");
@@ -268,18 +305,21 @@ void checkStartWatering(Readings *r)
     return;
   }
 
-  DateTime dtWateringLastTime(wateringLastTime); 
-  logWatering("wateringLastTime = ", false);
-  logWatering(dtWateringLastTime.timestamp());
+  if (!dayIsGoodForWatering(r))
+  {
+    logWatering("reason: day is wrong ");
+    return;  
+  }
 
-  int secondsFromLastWatering = r->dt - wateringLastTime;
-  logWatering("secondsFromLastWatering = ", false);
-  logWatering(secondsFromLastWatering);
-  // полив раз в daysBetweenWatering суток, а больше 13 часов ночь не должна вроде быть
-  // но и близкое к суткам время мы не можем указать, вдруг посреди ночи отключался свет и полив был не сразу после выключения лампы
-  // поэтому возьмем в качестве временнОго зазора на полдня меньше, чем надо
-  int minSecondsBetweenWaterings = (daysBetweenWatering - 1) * SECONDS_PER_DAY + 13 * SECONDS_PER_HOUR;
-  if (secondsFromLastWatering < minSecondsBetweenWaterings) 
+  // Поливать будем сразу после выключения света
+  DateTime dtNow(r->dt);
+  if (dtNow.hour() != lampNightStartHour[lampMode] || dtNow.minute() > 30)
+  {
+    logWatering("reason: time is wrong");
+    return;  
+  }
+
+  if (wasWateringToday(r)) 
   {
     logWatering("reason: interval not passed");
     return;
