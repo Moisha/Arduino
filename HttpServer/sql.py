@@ -10,7 +10,7 @@ matplotlib.use("agg")
 
 def connectPg():
     return psycopg2.connect(database="growbox",
-                            host="192.168.1.10",
+                            host=open("server.txt").read(),
                             user="postgres",
                             password="123",
                             port="5432")
