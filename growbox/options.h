@@ -17,15 +17,15 @@ int lampDayStartHour[2] = {2, 8};
 #define WIFI_SSID  "Trifon"
 #define WIFI_PASSWORD  "18000dong"
 #define WIFI_DIAGNOSTIC_DATA_URL "http://192.168.1.9:9000" // Kibbutz
-#define WIFI_POST_DATA_URL "http://192.168.1.10:9000" // Melchior
+#define WIFI_POST_DATA_URL "http://192.168.1.100:9000" // Melchior
 
 #define ARCHIVE_TIME_SECONDS 180
 
-#define MIN_HUMIDITY 50
-#define MAX_HUMIDITY 60
+#define MIN_HUMIDITY 40
+#define MAX_HUMIDITY 50
 
 const float dailyWateringVolume = 2500.0; // тип обязательно float, чтобы не попасть на целочисленное деление
-const int daysBetweenWatering = 2;
+const int daysBetweenWaterings = 2;
 const float wateringPerMinute = 55.0;
 
 const int soilHumiditiSensorMin = 970;                    // Определяем минимальное показание датчика (в воздухе),
