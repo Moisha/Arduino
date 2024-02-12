@@ -5,27 +5,18 @@
 #include <ESP8266HTTPClient.h>
 #include "options.h"
 #include "readings.h"
+#include "logging.h"
+#include <NTPClient.h>
+#include <WiFiUdp.h>
 
 Readings lastWiFiExchangeReadings;
+WiFiClient wifiClient; 
 
-void LogWiFi(String s, bool ln = true)
-{
-  #ifdef LOG_HTTP
-    Serial.print(s);  
-    if (ln)
-      Serial.println();  
-  #endif
-}
-
-void LogWiFi(int val, bool ln = true)
-{
-  #ifdef LOG_HTTP
-    Serial.print(val);  
-    if (ln)
-      Serial.println();  
-  #endif
-}
-
+// 5 hours - time offset in seconds
+// 3 minutes - request frequency in milliseconds
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP,"pool.ntp.org", 3600 * 5, 3 * 60 * 1000);
+  
 void initWiFi()
 {
   WiFi.mode(WIFI_STA);
@@ -58,8 +49,8 @@ bool connectWiFi()
   }
 
   LogWiFi("WiFi connected");
-//  LogWiFi("IP address: ", false);
-//  LogWiFi(WiFi.localIP());
+
+  timeClient.begin();
   return true;
 }
 
@@ -90,11 +81,10 @@ void logHttpResponce(HTTPClient &http)
 
 bool doPostMeasurings(String url, String json)
 {
-  WiFiClient wifiClient; 
-  HTTPClient http;
-
   LogWiFi("URL: ", false); 
   LogWiFi(url);
+
+  HTTPClient http;
   http.begin(wifiClient, url);
   http.addHeader("Content-Type", "application/json");
 
@@ -146,6 +136,23 @@ bool postData(Readings *r)
   return true;
 }
 
+unsigned long getNTPTime()
+{
+  logTime("reading NTP: ", false);
+  logTime(timeClient.update() ? 1 : 0, false);
+  logTime(", ", false);
+  
+  if (!timeClient.isTimeSet())  
+  {
+    logTime("time not set");
+    return 0;
+  }  
+  
+  DateTime dt (timeClient.getEpochTime());
+  logTime(dt.timestamp());
+  return timeClient.getEpochTime();
+}
+
 void scanWiFi()
 {
   Serial.println("Wifi scan started");
@@ -182,5 +189,7 @@ void scanWiFi()
   }
   Serial.println("");
 }
+
+
 
 #endif

@@ -131,17 +131,23 @@ void readDHT(Readings *r)
 
 bool readRTC(Readings *r)
 {
-  #ifdef LOG_TIME
-    Serial.println("reading RTC");
-  #endif
-
   DateTime dt = rtc.now();
   r->dt = dt.unixtime();
 
-  #ifdef LOG_TIME
-    Serial.println(dt.timestamp());
-  #endif
+  logTime("reading RTC: ", false);
+  logTime(dt.timestamp());
 
+  // Время от NTP-сервера считаем более корректным, чем глюкавый RTC
+  long wifiDT = getNTPTime();
+  if (wifiDT > 0)
+  {    
+    // если разошлись больше чем на 10 минут, поправим RTC
+    if (abs(wifiDT - (long)r->dt) > 600)
+      rtc.adjust(DateTime(wifiDT));
+
+    r->dt = wifiDT;
+    return true;
+  }
 
   if (r->dt < readingsArchive[1]->dt || r->dt - readingsArchive[1]->dt > 600)
   {

@@ -49,4 +49,40 @@ void logDHT(float val, bool ln = true)
   #endif
 }
 
+void logTime(int val, bool ln = true)
+{
+  #ifdef LOG_TIME
+    Serial.print(val);  
+    if (ln)
+      Serial.println();  
+  #endif
+}
+
+void logTime(String val, bool ln = true)
+{
+  #ifdef LOG_TIME
+    Serial.print(val);  
+    if (ln)
+      Serial.println();  
+  #endif
+}
+
+void LogWiFi(String s, bool ln = true)
+{
+  #ifdef LOG_HTTP
+    Serial.print(s);  
+    if (ln)
+      Serial.println();  
+  #endif
+}
+
+void LogWiFi(int val, bool ln = true)
+{
+  #ifdef LOG_HTTP
+    Serial.print(val);  
+    if (ln)
+      Serial.println();  
+  #endif
+}
+
 #endif
