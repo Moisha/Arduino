@@ -231,7 +231,12 @@ void checkLampMode(Readings *r)
   #endif
 
   DateTime dt(r->dt);
-  switchLamp(dt.hour() >= lampDayStartHour[lampMode] && dt.hour() < lampNightStartHour[lampMode]);
+  int dayStart = lampDayStartHour[lampMode];
+  int nightStart = lampNightStartHour[lampMode];
+  if (dayStart < nightStart)
+    switchLamp(dt.hour() >= dayStart && dt.hour() < nightStart);
+  else
+    switchLamp(dt.hour() < nightStart || dt.hour() >= dayStart);
 }
 
 void switchWatering(bool v)
