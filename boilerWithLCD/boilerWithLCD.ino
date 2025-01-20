@@ -3,10 +3,12 @@
 // библиотека для работы с датчиком DS18B20
 #include <DallasTemperature.h>
 #include <LiquidCrystal_I2C.h>
-#include "DHT.h"
 #include "Wire.h"
 
-// сигнальный провод датчика
+// если не прописывается программа - зачисти флешку
+// esptool.py --port /dev/ttyUSB0 erase_flash
+
+// сигнальный провод датчика температуры
 #define ONE_WIRE_BUS D6
 
 // Реле упраления
@@ -41,25 +43,6 @@ void setRelay(bool state)
     digitalWrite(PIN_RELAY, HIGH);
 
   RelayState = state;
-}
-
-void setup(){
-  // инициализируем работу Serial-порта
-  Serial.begin(9600);
-  // начинаем работу с датчиком
-  sensor.begin();
-  // устанавливаем разрешение датчика от 9 до 12 бит
-  sensor.setResolution(12);
-
-  Wire.begin(D2, D1);
-  lcd.begin(D2, D1);
-  lcd.clear();         
-  lcd.backlight();
-
-  setRelay(false);
-
-  pinMode(A0, INPUT); 
-  pinMode(PIN_RELAY, OUTPUT);
 }
 
 int resistanceToTemp(int sensorValue)
@@ -111,6 +94,25 @@ void displayState(int temperature, int targetTemp)
   lcd.printf("R%d                  ", RelayState);
 }
 
+void setup(){
+  // инициализируем работу Serial-порта
+  Serial.begin(115200);
+  // начинаем работу с датчиком
+  sensor.begin();
+  // устанавливаем разрешение датчика от 9 до 12 бит
+  sensor.setResolution(12);
+
+  Wire.begin(D2, D1);
+  lcd.begin(D2, D1);
+  lcd.clear();         
+  lcd.backlight();
+
+  setRelay(false);
+
+  pinMode(A0, INPUT); 
+  pinMode(PIN_RELAY, OUTPUT);
+}
+
 void loop(){
   // переменная для хранения температуры
   int temperature;
@@ -130,10 +132,7 @@ void loop(){
   Serial.print("Target Temp: ");
   Serial.println(targetTemp);
   
-  // checkRelay(temperature, targetTemp);
-
-  setRelay(!RelayState);
-
+  checkRelay(temperature, targetTemp);
   displayState(temperature, targetTemp);
 
   delay(1000);
