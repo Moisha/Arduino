@@ -1,3 +1,4 @@
-/growbox/build/
-/growbox_esp32/build/
-/HttpServer/*.txt
+growbox/build/
+growbox_esp32/build/
+HttpServer/*.txt
+boilerWithLCD/build

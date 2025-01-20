@@ -24,7 +24,8 @@ void initWiFi()
 
 bool connectWiFi()
 {
-  LogWiFi("Try connecting to WiFi");
+  LogWiFi("Try connecting to WiFi ", false);
+  LogWiFi(WIFI_SSID);
   if (WiFi.status() == WL_CONNECTED)
   {
     LogWiFi("WiFi connected");

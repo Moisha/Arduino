@@ -19,19 +19,15 @@
             "includePath": [
                 "C:\\Users\\Мойша\\AppData\\Local\\Arduino15\\packages\\esp8266\\hardware\\esp8266\\3.1.2\\tools\\sdk\\include",
                 "C:\\Users\\Мойша\\AppData\\Local\\Arduino15\\packages\\esp8266\\hardware\\esp8266\\3.1.2\\tools\\sdk\\lwip2\\include",
-                "E:\\Programs\\Arduino\\growbox\\build\\core",
+                "E:\\Programs\\Arduino\\boilerWithLCD\\build\\core",
                 "C:\\Users\\Мойша\\AppData\\Local\\Arduino15\\packages\\esp8266\\hardware\\esp8266\\3.1.2\\cores\\esp8266",
                 "C:\\Users\\Мойша\\AppData\\Local\\Arduino15\\packages\\esp8266\\hardware\\esp8266\\3.1.2\\variants\\nodemcu",
-                "C:\\Users\\Мойша\\AppData\\Local\\Arduino15\\packages\\esp8266\\hardware\\esp8266\\3.1.2\\libraries\\ESP8266WiFi\\src",
-                "C:\\Users\\Мойша\\Documents\\Arduino\\libraries\\Adafruit_Unified_Sensor",
-                "C:\\Users\\Мойша\\Documents\\Arduino\\libraries\\DHT_sensor_library",
-                "C:\\Users\\Мойша\\Documents\\Arduino\\libraries\\RTClib\\src",
-                "C:\\Users\\Мойша\\Documents\\Arduino\\libraries\\Adafruit_BusIO",
-                "C:\\Users\\Мойша\\AppData\\Local\\Arduino15\\packages\\esp8266\\hardware\\esp8266\\3.1.2\\libraries\\Wire",
-                "C:\\Users\\Мойша\\AppData\\Local\\Arduino15\\packages\\esp8266\\hardware\\esp8266\\3.1.2\\libraries\\ESP8266HTTPClient\\src",
-                "C:\\Users\\Мойша\\Documents\\Arduino\\libraries\\NTPClient",
+                "C:\\Users\\Мойша\\Documents\\Arduino\\libraries\\OneWire",
+                "C:\\Users\\Мойша\\Documents\\Arduino\\libraries\\DallasTemperature",
                 "C:\\Users\\Мойша\\Documents\\Arduino\\libraries\\ESP8266-I2C-LCD1602-master",
-                "C:\\Users\\Мойша\\AppData\\Local\\Arduino15\\packages\\esp8266\\hardware\\esp8266\\3.1.2\\libraries\\SPI"
+                "C:\\Users\\Мойша\\Documents\\Arduino\\libraries\\DHT_sensor_library",
+                "C:\\Users\\Мойша\\AppData\\Local\\Arduino15\\packages\\esp8266\\hardware\\esp8266\\3.1.2\\libraries\\Wire",
+                "C:\\Users\\Мойша\\Documents\\Arduino\\libraries\\Adafruit_Unified_Sensor"
             ],
             "forcedInclude": [
                 "C:\\Users\\Мойша\\AppData\\Local\\Arduino15\\packages\\esp8266\\hardware\\esp8266\\3.1.2\\cores\\esp8266\\Arduino.h"

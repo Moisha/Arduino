@@ -138,7 +138,7 @@ void displayValues(Readings *r)
   }
 
   displayMode++;
-  displayMode %= 4;
+  displayMode %= 3;
 }
 
 #endif
