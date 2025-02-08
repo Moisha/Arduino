@@ -14,6 +14,9 @@
 // Реле упраления
 #define PIN_RELAY D5
 
+//  реле Ардуино инверсное, SSR-10 прямое  
+#define STRAIGTH_RELAY true
+
 #define TEMP_HISTERESIS 5
 
 const int LowTemp = 30;
@@ -30,14 +33,20 @@ DallasTemperature sensor(&oneWire);
 // display
 LiquidCrystal_I2C lcd(0x27, 16, 2); 
 
-bool RelayState;
+bool RelayState = false;
+
+int indicator = 0;
 
 void setRelay(bool state)
 {
   Serial.print("Relay: ");
   Serial.println(state);
 
-  if (state)
+  bool command = state;
+  if (STRAIGTH_RELAY)
+    command = !command;
+
+  if (command)
     digitalWrite(PIN_RELAY, LOW);
   else
     digitalWrite(PIN_RELAY, HIGH);
@@ -86,12 +95,29 @@ void lcdSecondLine()
   lcd.setCursor(0, 1);    
 }
 
+char nextIndicator()
+{
+  indicator++;
+  indicator %= 4;
+
+  switch (indicator)
+  {
+    case 0: return '/';
+    case 1: return '-';
+    case 2: return char(0);
+    case 3: return '|';
+  }
+
+  return '0';
+}
+
 void displayState(int temperature, int targetTemp)
 {
   lcdFirstLine();
   lcd.printf("T: %02d (%02d - %02d)           ", temperature, targetTemp - TEMP_HISTERESIS, targetTemp + TEMP_HISTERESIS);
   lcdSecondLine();
-  lcd.printf("R%d                  ", RelayState);
+  lcd.printf("R%d             ", RelayState);
+  lcd.print(nextIndicator());
 }
 
 void setup(){
@@ -101,11 +127,27 @@ void setup(){
   sensor.begin();
   // устанавливаем разрешение датчика от 9 до 12 бит
   sensor.setResolution(12);
+  
 
   Wire.begin(D2, D1);
+  
   lcd.begin(D2, D1);
   lcd.clear();         
   lcd.backlight();
+
+  // вместо обратного слеша на 1602 значой йены, запилим свой
+  byte ReverseSlash[] = {
+    B00000,
+    B10000,
+    B01000,
+    B00100,
+    B00010,
+    B00001,
+    B00000,
+    B00000
+  };
+
+  lcd.createChar(0, ReverseSlash);
 
   setRelay(false);
 

@@ -19,7 +19,6 @@
             "includePath": [
                 "/home/moisha/.arduino15/packages/esp8266/hardware/esp8266/3.1.2/tools/sdk/include",
                 "/home/moisha/.arduino15/packages/esp8266/hardware/esp8266/3.1.2/tools/sdk/lwip2/include",
-                "/home/moisha/programs/arduino/Arduino/boilerWithLCD/build/core",
                 "/home/moisha/.arduino15/packages/esp8266/hardware/esp8266/3.1.2/cores/esp8266",
                 "/home/moisha/.arduino15/packages/esp8266/hardware/esp8266/3.1.2/variants/nodemcu",
                 "/home/moisha/Arduino/libraries/OneWire",
