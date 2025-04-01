@@ -3,6 +3,7 @@
 
 #include "options.h"
 #include "utils.h"
+#include <RTClib.h>
 
 class Readings;
 
@@ -14,12 +15,10 @@ class Readings
     uint32_t dt;
     float temperature;
     float humidity;
-    float soilHumidity;
-    float soilHumidityRaw;
+    float targetHumidity;
     int lampMode; // 0 - veg, 1 - bloom, 2 - on, 3 - off
     bool lampRelayState;
-    bool wateringState;
-    uint32_t wateringLastTime;
+    bool humidifierState;
 
   Readings() 
   { 
@@ -31,12 +30,10 @@ class Readings
     dt = 0;
     temperature = NAN;
     humidity = NAN;
-    soilHumidity = NAN;
-    soilHumidityRaw = NAN;
+    targetHumidity = NAN;
     lampMode = 0;
     lampRelayState = false;
-    wateringState = false;
-    wateringLastTime = 0;
+    humidifierState = false;
   }
 
   void assign(Readings *source)
@@ -44,23 +41,10 @@ class Readings
     dt = source->dt;
     temperature = source->temperature;
     humidity = source->humidity;
-    soilHumidity = source->soilHumidity;    
-    soilHumidityRaw = source->soilHumidityRaw;    
+    targetHumidity = source->targetHumidity;
     lampMode = source->lampMode;
     lampRelayState = source->lampRelayState;
-    wateringState = source->wateringState;
-    wateringLastTime = source->wateringLastTime;
-  }
-
-  void setSoilHumidityRaw(float shr)
-  {
-    soilHumidityRaw = shr;             // Читаем сырые данные с датчика,
-    soilHumidity = map(soilHumidityRaw, soilHumiditiSensorMin, soilHumiditiSensorMax, 0, 100);  // адаптируем значения от 0 до 100
-    if (soilHumidity > 100 && soilHumidity < 120)
-      soilHumidity = 100;
-
-    if (soilHumidity < 0 && soilHumidity > -20)
-      soilHumidity = 0;    
+    humidifierState = source->humidifierState;
   }
 
   String formatForJSON(String name, String val)
@@ -74,15 +58,14 @@ class Readings
       return "";
 
     DateTime forStr(dt);
-    DateTime dtWateringLastTime(wateringLastTime);
 
     String res = "{\r\n" +
+      formatForJSON("source", DEVICE_LOCATION) +
       formatForJSON("dtStr", forStr.timestamp()) +
       formatForJSON("dt", String(dt)) + 
       formatForJSON("lampMode", String((int)lampMode)) + 
       formatForJSON("lampState", String((int)lampRelayState)) +
-      formatForJSON("wateringState", String((int)wateringState)) +
-      formatForJSON("wateringLastTime", dtWateringLastTime.timestamp());
+      formatForJSON("humidifierState", String((int)humidifierState));     
 
     if (!isnan(temperature))
       res += formatForJSON("temperature", floatToStr(temperature));
@@ -90,12 +73,10 @@ class Readings
     if (!isnan(humidity))
       res += formatForJSON("humidity", floatToStr(humidity));
 
-    if (!isnan(soilHumidity) && soilHumidity >= 0 && soilHumidity <= 100)
-      res += formatForJSON("soilHumidity", floatToStr(soilHumidity));
-
-    if (!isnan(soilHumidityRaw))
-      res += formatForJSON("soilHumidityRaw", floatToStr(soilHumidityRaw));
-
+    if (!isnan(targetHumidity))
+      res += formatForJSON("humidity", floatToStr(targetHumidity));
+      
+      
     res = res.substring(0, res.length() - 2) + "\n"; // уберем запятую в конце
 
     res += "}";

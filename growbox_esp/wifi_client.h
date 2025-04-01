@@ -3,65 +3,57 @@
 
 #include <WiFi.h>
 #include <HTTPClient.h>
+#include <RTClib.h>
 #include "options.h"
 #include "readings.h"
+#include "logging.h"
+#include <NTPClient.h>
+#include <WiFiUdp.h>
 
 Readings lastWiFiExchangeReadings;
+WiFiClient wifiClient; 
 
-void LogWiFi(String s, bool ln = true)
-{
-  #ifdef LOG_HTTP
-    Serial.print(s);  
-    if (ln)
-      Serial.println();  
-  #endif
-}
-
-void LogWiFi(int val, bool ln = true)
-{
-  #ifdef LOG_HTTP
-    Serial.print(val);  
-    if (ln)
-      Serial.println();  
-  #endif
-}
-
+// 5 hours - time offset in seconds
+// 3 minutes - request frequency in milliseconds
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP,"pool.ntp.org", 3600 * 5, 3 * 60 * 1000);
+  
 void initWiFi()
 {
-  LogWiFi("Init WiFi");
-  LogWiFi("WiFi getMode()");
-  LogWiFi(WiFi.getMode());
-  WiFi.mode(WIFI_STA);
-  LogWiFi("Init WiFi done");
+  LogWiFi("Init WiFi ", false);
+  LogWiFi(WiFi.mode(WIFI_STA));
 }
 
 bool connectWiFi()
 {
-  LogWiFi("Try connecting to WiFi");
+  LogWiFi("Try connecting to WiFi ", false);
+  LogWiFi(WIFI_SSID);
   if (WiFi.status() == WL_CONNECTED)
   {
     LogWiFi("WiFi connected");
     return true;
   }
-
+  
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
-  int tries = 10; 
+  int tries = 40; // 20 sec 
   while (--tries && WiFi.status() != WL_CONNECTED) 
   {
     delay(500);
     LogWiFi(".", false);
   }
 
-  if (WiFi.status() != WL_CONNECTED)
+  wl_status_t st = WiFi.status();
+  if (st != WL_CONNECTED)
   {
-    LogWiFi("Non Connecting to WiFi..");
+    LogWiFi("Non Connecting to WiFi..", false);
+    LogWiFi((int)st);
     return false;
   }
 
   LogWiFi("WiFi connected");
-//  LogWiFi("IP address: ", false);
-//  LogWiFi(WiFi.localIP());
+
+  timeClient.begin();
   return true;
 }
 
@@ -71,7 +63,7 @@ bool checkHttpResponceCode(HTTPClient &http, int httpCode)
   if (httpCode <= 0)
   {
     LogWiFi("[HTTP] POST... failed, error: ", false);
-    LogWiFi(http.errorToString(httpCode).c_str());
+    LogWiFi(http.errorToString(httpCode));
     return false;
   }  
   
@@ -90,17 +82,14 @@ void logHttpResponce(HTTPClient &http)
   LogWiFi(">>");
 }
 
-bool postMeasurings(Readings *r)
+bool doPostMeasurings(String url, String json)
 {
-  WiFiClient wifiClient; 
+  LogWiFi("URL: ", false); 
+  LogWiFi(url);
+
   HTTPClient http;
-
-  LogWiFi("URL: " WIFI_POST_DATA_URL);
-  http.begin(wifiClient, WIFI_POST_DATA_URL);
+  http.begin(wifiClient, url);
   http.addHeader("Content-Type", "application/json");
-
-  String json = r->toJSON();
-  LogWiFi(json);
 
   int httpCode = http.POST(json);
   bool res = checkHttpResponceCode(http, httpCode);
@@ -111,12 +100,21 @@ bool postMeasurings(Readings *r)
   return res;
 }
 
-bool needSend(Readings *r)
+bool postMeasurings(Readings *r)
 {
-  bool res = r->dt - lastWiFiExchangeReadings.dt > ARCHIVE_TIME_SECONDS
+  String json = r->toJSON();
+  LogWiFi(json);
+
+  doPostMeasurings(WIFI_DIAGNOSTIC_DATA_URL, json);
+  return doPostMeasurings(WIFI_POST_DATA_URL, json);
+}
+
+bool wifi_needSend(Readings *r)
+{
+  bool res = r->dt - lastWiFiExchangeReadings.dt >= ARCHIVE_TIME_SECONDS
     || (r->lampMode != lastWiFiExchangeReadings.lampMode)
     || (r->lampRelayState != lastWiFiExchangeReadings.lampRelayState)
-    || (r->wateringState != lastWiFiExchangeReadings.wateringState);
+    || (r->humidifierState != lastWiFiExchangeReadings.humidifierState);
 
   LogWiFi("WiFi: ", false);
   LogWiFi(res ? "Need send" : "No need send");
@@ -124,31 +122,48 @@ bool needSend(Readings *r)
   return res;
 }
 
-void postData(Readings *r)
+bool postData(Readings *r)
 {
   LogWiFi("WiFi: post data");
-  if (!needSend(r))
-    return;
+  if (!wifi_needSend(r))
+    return false;
 
   if (!connectWiFi())
-    return;
+    return false;
 
   if (!postMeasurings(r))
-  {
-    WiFi.disconnect(true, true);
-    return;
-  }
+    return false;
 
-  lastWiFiExchangeReadings.assign(r);    
+  lastWiFiExchangeReadings.assign(r);
+  return true;
+}
+
+unsigned long getNTPTime()
+{
+  if (!connectWiFi())
+    return 0;
+
+
+  logTime("reading NTP: ", false);
+  logTime(timeClient.update() ? 1 : 0, false);
+  logTime(", ", false);
+  
+  if (!timeClient.isTimeSet())  
+  {
+    logTime("time not set");
+    return 0;
+  }  
+  
+  DateTime dt (timeClient.getEpochTime());
+  logTime(dt.timestamp());
+  return timeClient.getEpochTime();
 }
 
 void scanWiFi()
 {
   Serial.println("Wifi scan started");
-  Serial.println(WiFi.status());
-  
+
   // WiFi.scanNetworks will return the number of networks found
-  Serial.println("Wifi scanNetworks");
   int n = WiFi.scanNetworks();
   Serial.println("Wifi scan ended");
   if (n == 0) {
@@ -167,20 +182,20 @@ void scanWiFi()
       Serial.print("dBm (");
       
       Serial.print(WiFi.RSSI(i));//Signal strength in %  
-      Serial.print("% )"); 
-/*
-      if(WiFi.encryptionType(i) == ENC_TYPE_NONE)
+     Serial.print("% )"); 
+      if(WiFi.encryptionType(i) == WIFI_AUTH_OPEN)
       {
           Serial.println(" <<***OPEN***>>");        
       }else{
           Serial.println();        
       }
-*/      
 
       delay(10);
     }
   }
   Serial.println("");
 }
+
+
 
 #endif

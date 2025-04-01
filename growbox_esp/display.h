@@ -46,28 +46,6 @@ void displayTH(Readings *r)
   lcd.print(LCD_FILLER);  
 }
 
-void displaySoil(Readings *r)
-{
-  lcdFirstLine();  
-  lcd.print("Soil H: ");
-  if (isnan(r->soilHumidity))
-    lcd.print("---");
-  else
-  {
-    lcd.print((int)r->soilHumidityRaw);
-    lcd.print(" / ");
-    lcd.print((int)r->soilHumidity);
-  }
-
-  lcd.print(LCD_FILLER);
-
-  DateTime lastWatering(r->wateringLastTime);
-  lcdSecondLine();  
-  lcd.print("W: ");
-  lcd.printf("%02d.%02d %02d:%02d", lastWatering.day(), lastWatering.month(), lastWatering.hour(), lastWatering.minute());
-  lcd.print(LCD_FILLER);
-}
-
 void displayLamp(Readings *r)
 {
   lcdFirstLine();  
@@ -104,7 +82,7 @@ void displayLamp(Readings *r)
 
 void initDisplay()
 {
-  lcd.begin(GROWBOX_SDA, GROWBOX_SCL);
+  lcd.begin(SDA_PIN, SCL_PIN);
 
   lcd.clear();         
   lcd.backlight();      // Make sure backlight is on  
@@ -114,6 +92,8 @@ void initDisplay()
 
 void displayValues(Readings *r)
 {
+  return;
+
   switch (displayMode)
   {
     case 0:
@@ -128,16 +108,12 @@ void displayValues(Readings *r)
       displayLamp(r);
       break;
     
-    case 3:
-      displaySoil(r);
-      break;
-
-    default:
+     default:
       break;
   }
 
   displayMode++;
-  displayMode %= 4;
+  displayMode %= 3;
 }
 
 #endif

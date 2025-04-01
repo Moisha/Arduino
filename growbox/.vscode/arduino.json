@@ -3,5 +3,5 @@
     "board": "esp8266:esp8266:nodemcuv2",
     "sketch": "growbox.ino",
     "output": "./build",
-    "port": "COM5"
+    "port": "/dev/ttyUSB0"
 }

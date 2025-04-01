@@ -1,0 +1,7 @@
+{
+    "sketch": "growbox_esp.ino",
+    "board": "esp32:esp32:lolin32",
+    "output": "build",
+    "configuration": "FlashFreq=80,PartitionScheme=default,CPUFreq=240,UploadSpeed=921600,DebugLevel=none,EraseFlash=none",
+    "port": "/dev/ttyUSB0"
+}

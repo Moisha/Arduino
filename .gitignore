@@ -1,4 +1,4 @@
 growbox/build/
-growbox_esp32/build/
+growbox_esp/build/
 HttpServer/*.txt
 boilerWithLCD/build
