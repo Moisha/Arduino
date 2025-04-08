@@ -67,4 +67,40 @@ void LogWiFi(int val, bool ln = true)
   #endif
 }
 
+void logCommon(String s, bool ln = true) 
+{
+  #ifdef LOG_COMMON
+    Serial.print(s);  
+    if (ln)
+      Serial.println();  
+  #endif
+}
+
+void logCommon(int val, bool ln = true)
+{
+  #ifdef LOG_COMMON
+    Serial.print(val);  
+    if (ln)
+      Serial.println();  
+  #endif
+}
+
+void logLamp(String s, bool ln = true) 
+{
+  #ifdef LOG_LAMP_MODE
+    Serial.print(s);  
+    if (ln)
+      Serial.println();  
+  #endif
+}
+
+void logLamp(int val, bool ln = true)
+{
+  #ifdef LOG_LAMP_MODE
+    Serial.print(val);  
+    if (ln)
+      Serial.println();  
+  #endif
+}
+
 #endif

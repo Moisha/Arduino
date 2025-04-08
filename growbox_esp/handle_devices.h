@@ -9,7 +9,7 @@ void readDHT(Readings *r)
   float newT = dht.readTemperature();
   // if temperature read failed, don't change t value
   if (isnan(newT)) {
-    Serial.println("Failed to read from DHT sensor!");
+    logDHT("Failed to read from DHT sensor!");
   }
   else {
     logDHT("T=", false);
@@ -43,7 +43,7 @@ void readDHT(Readings *r)
 
 bool readRTC(Readings *r)
 {
-  DateTime dt = rtc.now();
+  DateTime dt; // = rtc.now();
   r->dt = dt.unixtime();
 
   logTime("reading RTC: ", false);
@@ -54,8 +54,8 @@ bool readRTC(Readings *r)
   if (wifiDT > 0)
   {    
     // если разошлись больше чем на 10 минут, поправим RTC
-    if (abs(wifiDT - (long)r->dt) > 600)
-      rtc.adjust(DateTime(wifiDT));
+    //if (abs(wifiDT - (long)r->dt) > 600)
+    //  rtc.adjust(DateTime(wifiDT));
 
     r->dt = wifiDT;
     return true;
@@ -81,10 +81,8 @@ void switchHumidifier(bool v)
 
 void switchLamp(bool v)
 {
-  #ifdef LOG_LAMP_MODE  
-    Serial.print("switchLamp ");
-    Serial.println(v);    
-  #endif
+  logLamp("switchLamp ");
+  logLamp(v);    
 
   lampRelayState = v;
   digitalWrite(LAMP_PIN, v ? LOW : HIGH);  
@@ -92,19 +90,27 @@ void switchLamp(bool v)
 
 void checkHumidifier(Readings *r)
 {
+  int target = analogRead(HUMIDIFIER_TARGET_PIN);
+  logDHT("potenciometer ", false);
+  logDHT(target);
+
+  targetHumidity = (float)target / 4096.0 * 100.0;
+  logDHT("calculate target humidity ", false);
+  logDHT(targetHumidity); 
+
+  if (targetHumidity < HUMIDIFIER_TARGET_MIN || targetHumidity > HUMIDIFIER_TARGET_MAX)
+    targetHumidity = DEFAULT_HUMIDITY;
+
+  logDHT("real target humidity ", false);
+  logDHT(targetHumidity); 
+
   if (!isnan(r->humidity))
   {
-    if (r->humidity < MIN_HUMIDITY)
-    {
+    if (r->humidity < DEFAULT_HUMIDITY - HUMIDITY_HISTERESIS)
       switchHumidifier(true);
-      return;
-    }
     else
-    if (r->humidity >= MAX_HUMIDITY)
-    {
+    if (r->humidity >= DEFAULT_HUMIDITY + HUMIDITY_HISTERESIS)
       switchHumidifier(false);
-      return;
-    }
   }
 
   logDHT("humidifier ", false);
@@ -114,10 +120,8 @@ void checkHumidifier(Readings *r)
 void checkLampMode(Readings *r)
 {
   lampMode = digitalRead(GROW_VEG_SWITCH_PIN); // read from switch
-  #ifdef LOG_LAMP_MODE  
-    Serial.print("lampMode ");
-    Serial.println(lampMode);    
-  #endif
+  logLamp("lampMode ");
+  logLamp(lampMode);    
 
   DateTime dt(r->dt);
   int dayStart = lampDayStartHour[lampMode];
@@ -133,4 +137,5 @@ void updateGlobalVars(Readings *r)
   r->lampRelayState = lampRelayState;
   r->lampMode = lampMode;
   r->humidifierState = humidifierState;
+  r->targetHumidity = targetHumidity;
 }

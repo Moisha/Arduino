@@ -3,16 +3,22 @@
 #include "devices.h"
 #include "options.h"
 #include "handle_devices.h"
+#include <Wire.h>
 
 void initRelays()
 {
+  logCommon("pinMode lamp"); 
   pinMode(LAMP_PIN, OUTPUT);
+
+  logCommon("pinMode humidifier"); 
   pinMode(HUMIDIFIER_PIN, OUTPUT);
+
+  logCommon("pinMode done"); 
 
   switchLamp(false);
   switchHumidifier(true);
 
-  Serial.println("initRelays done");
+  logCommon("initRelays done");
 }
 
 void checkInitialDT()
@@ -44,14 +50,17 @@ void checkInitialDT()
 
 void initRTC()
 {
-  Serial.println("initRTC");
+  logCommon("RTC not configured");
+  return;
+
+  logCommon("initRTC");
   if (!rtc.begin()) 
   {
-    Serial.println("Couldn't find RTC");
+    logCommon("Couldn't find RTC");
     return;
   }
 
-  Serial.println("RTC found");
+  logCommon("RTC found");
 
   #ifdef RTC_UPDATE_TIME
     // sets the RTC to the date & time on PC this sketch was compiled
@@ -63,6 +72,7 @@ void initRTC()
 
 void initDHT()
 {
+  pinMode(HUMIDIFIER_TARGET_PIN, INPUT);
   logDHT("initDHT");
   dht.begin();
   logDHT("initDHT done");
@@ -85,4 +95,22 @@ void printGreeting()
   Serial.print(F(__DATE__));
   Serial.print(" ");
   Serial.println(F(__TIME__));
+}
+
+void initI2C()
+{
+  Wire.begin(SDA_PIN, SCL_PIN);
+}
+
+void initDisplay()
+{
+  logCommon("init display");
+  lcd.begin(SDA_PIN, SCL_PIN);
+
+  logCommon("clear display");
+
+  lcd.clear();         
+  lcd.backlight();      // Make sure backlight is on  
+
+  lcd.setCursor(0, 0);  
 }

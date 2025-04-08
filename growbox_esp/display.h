@@ -3,9 +3,9 @@
 
 #include "readings.h"
 #include "options.h"
+#include "devices.h"
 #include <LiquidCrystal_I2C.h>
 
-LiquidCrystal_I2C lcd(0x27, 16, 2); // display
 int displayMode = 0;
 #define LCD_FILLER "                "
 
@@ -33,16 +33,27 @@ void displayDt(Readings *r)
   lcd.print(LCD_FILLER);
 }
 
+void displayRoundedFloat(float v)
+{
+  if (isnan(v))
+    lcd.print(v);
+  else
+    lcd.print((int)v);
+
+}
+
 void displayTH(Readings *r)
 {
   lcdFirstLine();  
   lcd.printf("T: ");
-  lcd.print(r->temperature);    
+  displayRoundedFloat(r->temperature);
   lcd.print(LCD_FILLER);
 
   lcdSecondLine();  
   lcd.printf("H: ");
-  lcd.print(r->humidity);
+  displayRoundedFloat(r->humidity);
+  lcd.print(" / ");
+  displayRoundedFloat(r->targetHumidity);
   lcd.print(LCD_FILLER);  
 }
 
@@ -80,20 +91,8 @@ void displayLamp(Readings *r)
   lcd.print(LCD_FILLER);  
 }
 
-void initDisplay()
-{
-  lcd.begin(SDA_PIN, SCL_PIN);
-
-  lcd.clear();         
-  lcd.backlight();      // Make sure backlight is on  
-
-  lcd.setCursor(0, 0);  
-}
-
 void displayValues(Readings *r)
 {
-  return;
-
   switch (displayMode)
   {
     case 0:

@@ -36,7 +36,7 @@ bool connectWiFi()
   
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
-  int tries = 40; // 20 sec 
+  int tries = 10; // 5 sec 
   while (--tries && WiFi.status() != WL_CONNECTED) 
   {
     delay(500);
@@ -143,7 +143,6 @@ unsigned long getNTPTime()
   if (!connectWiFi())
     return 0;
 
-
   logTime("reading NTP: ", false);
   logTime(timeClient.update() ? 1 : 0, false);
   logTime(", ", false);
@@ -161,39 +160,39 @@ unsigned long getNTPTime()
 
 void scanWiFi()
 {
-  Serial.println("Wifi scan started");
+  LogWiFi("Wifi scan started");
 
   // WiFi.scanNetworks will return the number of networks found
   int n = WiFi.scanNetworks();
-  Serial.println("Wifi scan ended");
+  LogWiFi("Wifi scan ended");
   if (n == 0) {
-    Serial.println("no networks found");
+    LogWiFi("no networks found");
   } else {
-    Serial.print(n);
-    Serial.println(" networks found");
+    LogWiFi(n);
+    LogWiFi(" networks found");
     for (int i = 0; i < n; ++i) {
       // Print SSID and RSSI for each network found
-      Serial.print(i + 1);
-      Serial.print(") ");
-      Serial.print(WiFi.SSID(i));// SSID
+      LogWiFi(i + 1);
+      LogWiFi(") ");
+      LogWiFi(WiFi.SSID(i));// SSID
 
                   
-      Serial.print(WiFi.RSSI(i));//Signal strength in dBm  
-      Serial.print("dBm (");
+      LogWiFi(WiFi.RSSI(i));//Signal strength in dBm  
+      LogWiFi("dBm (");
       
-      Serial.print(WiFi.RSSI(i));//Signal strength in %  
-     Serial.print("% )"); 
+      LogWiFi(WiFi.RSSI(i));//Signal strength in %  
+      LogWiFi("% )"); 
       if(WiFi.encryptionType(i) == WIFI_AUTH_OPEN)
       {
-          Serial.println(" <<***OPEN***>>");        
+        LogWiFi(" <<***OPEN***>>");        
       }else{
-          Serial.println();        
+        LogWiFi("");        
       }
 
       delay(10);
     }
   }
-  Serial.println("");
+  LogWiFi("");
 }
 
 

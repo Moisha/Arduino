@@ -14,8 +14,9 @@ void setup() {
   initReadings();
   initSerial(); 
   initDHT();
-  initRTC(); 
+  initI2C();
   initDisplay();
+  initRTC();
   initRelays();
   initGrowVerSwitch();
   initWiFi();  
