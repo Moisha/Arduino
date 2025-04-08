@@ -72,7 +72,6 @@ void initRTC()
 
 void initDHT()
 {
-  pinMode(HUMIDIFIER_TARGET_PIN, INPUT);
   logDHT("initDHT");
   dht.begin();
   logDHT("initDHT done");
@@ -86,7 +85,7 @@ void initSerial()
 
 void initGrowVerSwitch()
 {
-  pinMode(GROW_VEG_SWITCH_PIN, INPUT);
+  pinMode(GROW_VEG_SWITCH_PIN, INPUT_PULLDOWN);
 }
 
 void printGreeting()

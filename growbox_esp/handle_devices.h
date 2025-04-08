@@ -90,11 +90,11 @@ void switchLamp(bool v)
 
 void checkHumidifier(Readings *r)
 {
-  int target = analogRead(HUMIDIFIER_TARGET_PIN);
+  int target = 4096 - analogRead(HUMIDIFIER_TARGET_PIN); // почему-то потерциометр работает только вверх ногами
   logDHT("potenciometer ", false);
   logDHT(target);
 
-  targetHumidity = (float)target / 4096.0 * 100.0;
+  targetHumidity = 30 + (float)target / 4096.0 * 50.0;
   logDHT("calculate target humidity ", false);
   logDHT(targetHumidity); 
 
