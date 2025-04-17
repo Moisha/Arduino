@@ -1,4 +1,4 @@
-#include <Adafruit_Sensor.h>
+// #include <Adafruit_Sensor.h>
 #include "wifi_client.h"
 #include "readings.h"
 #include "options.h"
@@ -7,6 +7,7 @@
 #include "devices.h"
 #include "init_devices.h"
 #include "handle_devices.h"
+#include <esp_log.h>
 
 void setup() {
   delay(1000);  
@@ -15,11 +16,11 @@ void setup() {
   initSerial(); 
   initDHT();
   initI2C();
-  initDisplay();
-  initRTC();
+  initDisplay();  
   initRelays();
   initGrowVerSwitch();
-  initWiFi();  
+  initWiFi();
+  initRTC();
 }
 
 void loop()

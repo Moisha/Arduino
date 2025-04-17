@@ -54,6 +54,8 @@ void displayTH(Readings *r)
   displayRoundedFloat(r->humidity);
   lcd.print(" / ");
   displayRoundedFloat(r->targetHumidity);
+  lcd.print(", R: ");
+  lcd.print(r->humidifierState);
   lcd.print(LCD_FILLER);  
 }
 

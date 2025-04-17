@@ -76,16 +76,16 @@ void switchHumidifier(bool v)
   logDHT(v);
 
   humidifierState = v;
-  digitalWrite(HUMIDIFIER_PIN, v ? LOW : HIGH);  
+  digitalWrite(HUMIDIFIER_PIN, v ? HUMIDIFIER_PIN_ON : HUMIDIFIER_PIN_OFF);  
 }
 
 void switchLamp(bool v)
 {
-  logLamp("switchLamp ");
+  logLamp("switchLamp ", false);
   logLamp(v);    
 
   lampRelayState = v;
-  digitalWrite(LAMP_PIN, v ? LOW : HIGH);  
+  digitalWrite(LAMP_PIN, v ? LAMP_PIN_ON : LAMP_PIN_OFF);  
 }
 
 void checkHumidifier(Readings *r)
@@ -106,10 +106,10 @@ void checkHumidifier(Readings *r)
 
   if (!isnan(r->humidity))
   {
-    if (r->humidity < DEFAULT_HUMIDITY - HUMIDITY_HISTERESIS)
+    if (r->humidity <= targetHumidity - HUMIDITY_HISTERESIS)
       switchHumidifier(true);
     else
-    if (r->humidity >= DEFAULT_HUMIDITY + HUMIDITY_HISTERESIS)
+    if (r->humidity >= targetHumidity + HUMIDITY_HISTERESIS)
       switchHumidifier(false);
   }
 
@@ -120,7 +120,7 @@ void checkHumidifier(Readings *r)
 void checkLampMode(Readings *r)
 {
   lampMode = digitalRead(GROW_VEG_SWITCH_PIN); // read from switch
-  logLamp("lampMode ");
+  logLamp("lampMode ", false);
   logLamp(lampMode);    
 
   DateTime dt(r->dt);

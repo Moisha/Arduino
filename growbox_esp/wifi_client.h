@@ -16,7 +16,7 @@ WiFiClient wifiClient;
 // 5 hours - time offset in seconds
 // 3 minutes - request frequency in milliseconds
 WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP,"pool.ntp.org", 3600 * 5, 3 * 60 * 1000);
+NTPClient timeClient(ntpUDP, "pool.ntp.org", 3600 * 5, 3 * 60 * 1000);
   
 void initWiFi()
 {
