@@ -103,7 +103,9 @@ bool postMeasurings(Readings *r)
   String json = r->toJSON();
   LogWiFi(json);
 
+#ifdef WIFI_DIAGNOSTIC_DATA_URL  
   doPostMeasurings(WIFI_DIAGNOSTIC_DATA_URL, json);
+#endif  
   return doPostMeasurings(WIFI_POST_DATA_URL, json);
 }
 

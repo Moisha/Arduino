@@ -80,6 +80,7 @@ class Readings
     DateTime dtWateringLastTime(wateringLastTime);
 
     String res = "{\r\n" +
+      formatForJSON("source", DEVICE_LOCATION) +
       formatForJSON("dtStr", forStr.timestamp()) +
       formatForJSON("dt", String(dt)) + 
       formatForJSON("lampMode", String((int)lampMode)) + 

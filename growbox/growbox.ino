@@ -9,8 +9,7 @@
 #include "display.h"
 #include "logging.h"
 
-#define DHTTYPE DHT22     // DHT 22 (AM2302)
-
+#define DHTTYPE DHT11
 #define SOIL_PIN A0
 #define LAMP_PIN D3
 #define HUMIDIFIER_PIN D6

@@ -19,9 +19,16 @@ def saveToPg(post_body):
     fields = ['raw_dt', 'dt', 'lamp_state', 'lamp_mode', 'watering_state', 'humidifier_state']
     values = [props['dt'], dtToPgString(props['dt']), props['lampState'], props['lampMode'], props['wateringState'], props['humidifierState']]
 
+    fields += ['source']
+    values += (1 if 'source' in props and [props['source']] == "Dungeon" else 0)
+
     if ('humidity' in props) & check_float_prop(props['humidity']):
         fields += ['humidity']
         values += [props['humidity']]
+
+    if 'humidityTarget' in props:
+        fields += ['humidity_target']
+        values += [props['humidityTarget']]
 
     if ('temperature' in props) & check_float_prop(props['temperature']):
         fields += ['temperature']
@@ -59,12 +66,17 @@ class HttpGrowBoxHandler(BaseHTTPRequestHandler):
         self.wfile.write(('<body>' + self.getInfoBody() + '</body></html>').encode())
 
     def get_writePlot(self):
+        source = 0
         cnt = 1000
         path_parts = self.path.split("/")
-        if len(path_parts) > 2 and path_parts[2].isnumeric():
-            cnt = int(path_parts[2])
 
-        write_plot_to_iobytes(self.wfile, 20, 10, cnt)
+        if len(path_parts) > 2 and path_parts[2].isnumeric():
+            source = int(path_parts[2])
+
+        if len(path_parts) > 3 and path_parts[3].isnumeric():
+            cnt = int(path_parts[3])
+
+        write_plot_to_iobytes(self.wfile, 20, 10, cnt, source)
 
     def get_isPlot(self):
         return self.path.startswith('/plot')
