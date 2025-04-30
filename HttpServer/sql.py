@@ -16,7 +16,11 @@ def connectPg():
                             port="5432")
 
 
-def get_info_text(for_html):
+def device_condition(name):
+    return f"(select id_device from devices where name = '{name}')"
+
+
+def get_info_text(for_html, source):
     h1 = "<h3>" if for_html else ""
     h2 = "</h3>" if for_html else ""
     p1 = "<p>" if for_html else ""
@@ -24,9 +28,10 @@ def get_info_text(for_html):
 
     body = h1 + "Growbox parameters" + h2 + "\r\n"
     try:
-        sql = ("select dt, dt_server, lamp_state, lamp_mode, watering_state, temperature, humidity, soil_humidity, soil_humidity_raw, humidifier_state," +
-               "       (select dt from readings r1 where watering_state = 1 order by idr desc limit 1) as last_watering " +
-               "  from readings order by idr desc limit 1")
+        sql = (f"select dt, dt_server, lamp_state, lamp_mode, temperature, humidity, humidity_target, humidifier_state"               
+               f"  from readings "
+               f"  where id_device = {device_condition(source)}"
+               f"  order by idr desc limit 1")
         print(sql)
 
         conn = connectPg()
@@ -53,7 +58,7 @@ def write_plot_to_iobytes(wfile, len, height, cnt=1000, source = ""):
           f"select dt_server, lamp_state * 9 - 10 as lamp_state, temperature, humidity, humidity_target, " +\
           f"       humidifier_state * 9 + 10 as humidifier_state " +\
           f"  from readings r1 " + \
-          f"  where coalesce(source, 0) = {source} " + \
+          f"  where id_device = {device_condition(source)} " + \
           f"  order by idr desc limit {cnt} " +\
           f"  ) t " +\
           f"  order by 1 desc"
@@ -65,11 +70,11 @@ def write_plot_to_iobytes(wfile, len, height, cnt=1000, source = ""):
 
         col_names = [desc[0] for desc in cur.description]
         values = numpy.array(list(cur.fetchall()))
-        colors = ["k", "c", "r", "b", "g", "y"]
+        colors = ["k", "r", "c", "b", "y"]
 
         fig, ax = plt.subplots(figsize=(len, height))
-        ax.set_title("Growbox")
-        for i in range(6):
+        ax.set_title(source)
+        for i in range(5):
             ax.plot(values[:, 0], values[:, i + 1], label=col_names[i + 1], color=colors[i])
 
         dates_fmt = mdates.DateFormatter("%d.%m %H:%M")

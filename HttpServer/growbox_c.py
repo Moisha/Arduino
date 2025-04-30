@@ -12,43 +12,34 @@ def check_float_prop(val):
     return (v > 0) & (v < 100)
 
 
+def appendField(props, propName, fieldName, fields, values, checkFloat = False):
+    if (propName in props) and (not checkFloat or check_float_prop(props[propName])):
+        fields += [fieldName]
+        values += [props[propName]]
+
+
 def saveToPg(post_body):
     props = json.loads(post_body);
     # props = json.loads(b'{"dt": "1704899625",\r\n "dtStr": "2024-01-10T15:13:45", "lampMode": 0, "lampState": 1, "wateringState": 0, "soilHumidity": 315.0 }');
 
-    fields = ['raw_dt', 'dt', 'lamp_state', 'lamp_mode', 'watering_state', 'humidifier_state']
-    values = [props['dt'], dtToPgString(props['dt']), props['lampState'], props['lampMode'], props['wateringState'], props['humidifierState']]
+    device = device_condition(props['source'])
+    dt_now = f"'{datetime.now().strftime('%Y%m%d %H:%M:%S')}'"
 
-    fields += ['source']
-    values += (1 if 'source' in props and [props['source']] == "Dungeon" else 0)
+    fields = ['id_device', 'dt_server', 'raw_dt', 'dt', 'lamp_state', 'lamp_mode', 'humidifier_state']
+    values = [device, dt_now, props['dt'], dtToPgString(props['dt']), props['lampState'], props['lampMode'], props['humidifierState']]
 
-    if ('humidity' in props) & check_float_prop(props['humidity']):
-        fields += ['humidity']
-        values += [props['humidity']]
-
-    if 'humidityTarget' in props:
-        fields += ['humidity_target']
-        values += [props['humidityTarget']]
-
-    if ('temperature' in props) & check_float_prop(props['temperature']):
-        fields += ['temperature']
-        values += [props['temperature']]
-
-    if 'soilHumidity' in props:
-        fields += ['soil_humidity']
-        values += [props['soilHumidity']]
-
-    if 'soilHumidityRaw' in props:
-        fields += ['soil_humidity_raw']
-        values += [props['soilHumidityRaw']]
+    appendField(props, 'humidity', 'humidity', fields, values, True)
+    appendField(props, 'targetHumidity', 'humidity_target', fields, values, True)
+    appendField(props, 'temperature', 'temperature', fields, values, True)
+    appendField(props, 'co2', 'co2', fields, values)
+    appendField(props, 'fanState', 'fan_state', fields, values)
 
     field_list = ", ".join(fields)
     value_list = ", ".join(values)
 
     conn = connectPg()
     try:
-        sql = 'insert into readings (' + field_list + ', dt_server) ' +\
-              'select ' + value_list + ", '" + datetime.now().strftime('%Y%m%d %H:%M:%S') + "'"
+        sql = f"insert into readings ({field_list}) select {value_list}"
         cur = conn.cursor()
         cur.execute(sql)
         conn.commit()
@@ -58,12 +49,14 @@ def saveToPg(post_body):
 
 class HttpGrowBoxHandler(BaseHTTPRequestHandler):
     def getInfoBody(self):
-        return get_info_text(True)
+        return get_info_text(True, "")
+
 
     def get_writeValues(self):
         self.wfile.write('<html><head><meta charset="utf-8">'.encode())
         self.wfile.write('<title>Growbox HTTP server</title></head>'.encode())
         self.wfile.write(('<body>' + self.getInfoBody() + '</body></html>').encode())
+
 
     def get_writePlot(self):
         source = 0
@@ -71,15 +64,17 @@ class HttpGrowBoxHandler(BaseHTTPRequestHandler):
         path_parts = self.path.split("/")
 
         if len(path_parts) > 2 and path_parts[2].isnumeric():
-            source = int(path_parts[2])
+            source = path_parts[2]
 
         if len(path_parts) > 3 and path_parts[3].isnumeric():
             cnt = int(path_parts[3])
 
         write_plot_to_iobytes(self.wfile, 20, 10, cnt, source)
 
+
     def get_isPlot(self):
         return self.path.startswith('/plot')
+
 
     def do_GET(self):
         self.send_response(200)
@@ -102,6 +97,7 @@ class HttpGrowBoxHandler(BaseHTTPRequestHandler):
         except Exception as e:
             response_code = 500
             response_text = e.args[0]
+            print(e.args[0])
 
         self.send_response(response_code)
         self.send_header("Content-type", "text/plain")
