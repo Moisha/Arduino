@@ -14,6 +14,7 @@ class Readings
     uint32_t dt;
     float temperature;
     float humidity;
+    float targetHumidity;
     float soilHumidity;
     float soilHumidityRaw;
     int lampMode; // 0 - veg, 1 - bloom, 2 - on, 3 - off
@@ -32,6 +33,7 @@ class Readings
     dt = 0;
     temperature = NAN;
     humidity = NAN;
+    targetHumidity = (MAX_HUMIDITY + MIN_HUMIDITY) / 2.0;
     soilHumidity = NAN;
     soilHumidityRaw = NAN;
     lampMode = 0;
@@ -46,6 +48,7 @@ class Readings
     dt = source->dt;
     temperature = source->temperature;
     humidity = source->humidity;
+    targetHumidity = source->targetHumidity;
     soilHumidity = source->soilHumidity;    
     soilHumidityRaw = source->soilHumidityRaw;    
     lampMode = source->lampMode;
@@ -94,6 +97,9 @@ class Readings
 
     if (!isnan(humidity))
       res += formatForJSON("humidity", floatToStr(humidity));
+
+    if (!isnan(targetHumidity))
+      res += formatForJSON("targetHumidity", floatToStr(targetHumidity));
 
     if (!isnan(soilHumidity) && soilHumidity >= 0 && soilHumidity <= 100)
       res += formatForJSON("soilHumidity", floatToStr(soilHumidity));

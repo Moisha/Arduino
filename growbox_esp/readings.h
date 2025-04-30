@@ -75,8 +75,7 @@ class Readings
 
     if (!isnan(targetHumidity))
       res += formatForJSON("targetHumidity", floatToStr(targetHumidity));
-      
-      
+
     res = res.substring(0, res.length() - 2) + "\n"; // уберем запятую в конце
 
     res += "}";
