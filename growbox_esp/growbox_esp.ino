@@ -33,12 +33,14 @@ void loop()
   if (readRTC(r))
   {
     readDHT(r);
-    checkLampMode(r);
+    readCO2(r);
+    checkLamp(r);
     checkHumidifier(r);
+    checkFan(r);
     updateGlobalVars(r);
     displayValues(r);
     postData(r);
   }
 
-  delay(1000);
+  delay(2000);
 }

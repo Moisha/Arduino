@@ -28,8 +28,10 @@ void displayDt(Readings *r)
   lcd.print(LCD_FILLER);
 
   lcdSecondLine();  
-  lcd.printf("Mem: ");
-  lcd.print(ESP.getFreeHeap());
+  lcd.print("Fan: ");
+  lcd.print(r->fanState);
+  lcd.printf(", СO2: ");
+  lcd.print(r->co2);
   lcd.print(LCD_FILLER);
 }
 

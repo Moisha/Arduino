@@ -29,4 +29,6 @@ int lampDayStartHour[2] = {18, 23};
 #define HUMIDIFIER_TARGET_MIN 35
 #define HUMIDIFIER_TARGET_MAX 75
 
+#define MAX_DAY_TEMPERATURE 35
+
 #endif

@@ -16,9 +16,11 @@ class Readings
     float temperature;
     float humidity;
     float targetHumidity;
+    float co2;
     int lampMode; // 0 - veg, 1 - bloom, 2 - on, 3 - off
     bool lampRelayState;
     bool humidifierState;
+    bool fanState;
 
   Readings() 
   { 
@@ -31,9 +33,11 @@ class Readings
     temperature = NAN;
     humidity = NAN;
     targetHumidity = NAN;
+    co2 = NAN;
     lampMode = 0;
     lampRelayState = false;
     humidifierState = false;
+    fanState = true;
   }
 
   void assign(Readings *source)
@@ -42,9 +46,11 @@ class Readings
     temperature = source->temperature;
     humidity = source->humidity;
     targetHumidity = source->targetHumidity;
+    co2 = source->co2;
     lampMode = source->lampMode;
     lampRelayState = source->lampRelayState;
     humidifierState = source->humidifierState;
+    fanState = source->fanState;
   }
 
   String formatForJSON(String name, String val)
@@ -65,7 +71,8 @@ class Readings
       formatForJSON("dt", String(dt)) + 
       formatForJSON("lampMode", String((int)lampMode)) + 
       formatForJSON("lampState", String((int)lampRelayState)) +
-      formatForJSON("humidifierState", String((int)humidifierState));     
+      formatForJSON("humidifierState", String((int)humidifierState)) +
+      formatForJSON("fanState", String((int)fanState));
 
     if (!isnan(temperature))
       res += formatForJSON("temperature", floatToStr(temperature));
@@ -75,6 +82,9 @@ class Readings
 
     if (!isnan(targetHumidity))
       res += formatForJSON("targetHumidity", floatToStr(targetHumidity));
+
+    if (!isnan(co2))
+      res += formatForJSON("co2", floatToStr(co2));
 
     res = res.substring(0, res.length() - 2) + "\n"; // уберем запятую в конце
 

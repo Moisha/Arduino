@@ -4,6 +4,24 @@
 #include "options.h"
 #include "readings.h"
 
+void readCO2(Readings *r)
+{
+  int rawVal = analogRead(CO2_PIN);
+  if (rawVal < 10)
+  {
+    logDHT("no CO2 sensor");
+    return;
+  }
+
+  logDHT("CO2 raw = ", false);
+  logDHT(rawVal);
+
+  if (!isnan(r->temperature) && !isnan(r->humidity))
+    r->co2 = co2Sensor.getCorrectedPPM(r->temperature, r->humidity);
+  else
+    r->co2 = co2Sensor.getPPM();    
+}
+
 void readDHT(Readings *r)
 {
   float newT = dht.readTemperature();
@@ -70,22 +88,30 @@ bool readRTC(Readings *r)
   return true;
 }
 
-void switchHumidifier(bool v)
+void switchDevice(String name, bool v, int pin, int on, int off)
 {
-  logDHT("switchHumidifier ", false);
+  logDHT(name, false);
+  logDHT(" ", false);
   logDHT(v);
 
+  digitalWrite(pin, v ? on : off);  
+}
+
+void switchHumidifier(bool v)
+{
   humidifierState = v;
-  digitalWrite(HUMIDIFIER_PIN, v ? HUMIDIFIER_PIN_ON : HUMIDIFIER_PIN_OFF);  
+  switchDevice("switchHumidifier", v, HUMIDIFIER_PIN, HUMIDIFIER_PIN_ON, HUMIDIFIER_PIN_OFF);
 }
 
 void switchLamp(bool v)
 {
-  logLamp("switchLamp ", false);
-  logLamp(v);    
-
   lampRelayState = v;
-  digitalWrite(LAMP_PIN, v ? LAMP_PIN_ON : LAMP_PIN_OFF);  
+  switchDevice("switchLamp", v, LAMP_PIN, LAMP_PIN_ON, LAMP_PIN_OFF);  
+}
+
+void switchFan(bool v)
+{
+  switchDevice("switchFan", v, FAN_PIN, FAN_PIN_ON, FAN_PIN_OFF);
 }
 
 void checkHumidifier(Readings *r)
@@ -117,7 +143,7 @@ void checkHumidifier(Readings *r)
   logDHT(humidifierState);
 }
 
-void checkLampMode(Readings *r)
+void checkLamp(Readings *r)
 {
   lampMode = digitalRead(GROW_VEG_SWITCH_PIN); // read from switch
   logLamp("lampMode ", false);
@@ -130,6 +156,13 @@ void checkLampMode(Readings *r)
     switchLamp(dt.hour() >= dayStart && dt.hour() < nightStart);
   else
     switchLamp(dt.hour() < nightStart || dt.hour() >= dayStart);
+}
+
+void checkFan(Readings *r)
+{
+  // пропеллер включаем ночью или при превышении допустимой температуры
+  r->fanState = !lampRelayState || isnan(r->temperature) || (r->temperature >= MAX_DAY_TEMPERATURE);
+  switchFan(r->fanState);
 }
 
 void updateGlobalVars(Readings *r)
