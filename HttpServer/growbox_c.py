@@ -7,13 +7,13 @@ def dtToPgString(unix_dt):
     return "'" + dt.strftime('%Y%m%d %H:%M:%S') + "'"
 
 
-def check_float_prop(val):
+def check_float_prop(val, max_val = 100):
     v = float(val)
-    return (v > 0) & (v < 100)
+    return (v > 0) & (v < max_val)
 
 
-def appendField(props, propName, fieldName, fields, values, checkFloat = False):
-    if (propName in props) and (not checkFloat or check_float_prop(props[propName])):
+def appendField(props, propName, fieldName, fields, values, checkFloat = False, max_val = 100):
+    if (propName in props) and (not checkFloat or check_float_prop(props[propName], max_val)):
         fields += [fieldName]
         values += [props[propName]]
 
@@ -31,7 +31,7 @@ def saveToPg(post_body):
     appendField(props, 'humidity', 'humidity', fields, values, True)
     appendField(props, 'targetHumidity', 'humidity_target', fields, values, True)
     appendField(props, 'temperature', 'temperature', fields, values, True)
-    appendField(props, 'co2', 'co2', fields, values)
+    appendField(props, 'co2', 'co2', fields, values, True, 2000)
     appendField(props, 'fanState', 'fan_state', fields, values)
 
     field_list = ", ".join(fields)
