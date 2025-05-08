@@ -19,6 +19,14 @@ void lcdSecondLine()
   lcd.setCursor(0, 1);    
 }
 
+void displayRoundedFloat(float v)
+{
+  if (isnan(v))
+    lcd.print(v);
+  else
+    lcd.print((int)v);
+}
+
 void displayDt(Readings *r)
 {
   DateTime dt(r->dt);
@@ -30,18 +38,9 @@ void displayDt(Readings *r)
   lcdSecondLine();  
   lcd.print("Fan: ");
   lcd.print(r->fanState);
-  lcd.printf(", СO2: ");
-  lcd.print(r->co2);
+  lcd.printf(" CO2: ");
+  displayRoundedFloat(r->co2);
   lcd.print(LCD_FILLER);
-}
-
-void displayRoundedFloat(float v)
-{
-  if (isnan(v))
-    lcd.print(v);
-  else
-    lcd.print((int)v);
-
 }
 
 void displayTH(Readings *r)

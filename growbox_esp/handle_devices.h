@@ -111,6 +111,7 @@ void switchLamp(bool v)
 
 void switchFan(bool v)
 {
+  fanState = v;
   switchDevice("switchFan", v, FAN_PIN, FAN_PIN_ON, FAN_PIN_OFF);
 }
 
@@ -161,8 +162,10 @@ void checkLamp(Readings *r)
 void checkFan(Readings *r)
 {
   // пропеллер включаем ночью или при превышении допустимой температуры
-  r->fanState = !lampRelayState || isnan(r->temperature) || (r->temperature >= MAX_DAY_TEMPERATURE);
-  switchFan(r->fanState);
+  if (!lampRelayState || isnan(r->temperature) || r->temperature >= MAX_DAY_TEMPERATURE)
+    switchFan(true);
+  else if (r->temperature <= TOLERABLE_DAY_TEMPERATURE)
+    switchFan(false);
 }
 
 void updateGlobalVars(Readings *r)
@@ -171,4 +174,5 @@ void updateGlobalVars(Readings *r)
   r->lampMode = lampMode;
   r->humidifierState = humidifierState;
   r->targetHumidity = targetHumidity;
+  r->fanState = fanState;
 }

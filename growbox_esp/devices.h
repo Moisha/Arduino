@@ -40,3 +40,5 @@ int lampMode = 0; // 0 - veg, 1 - bloom, 2 - on, 3 - off
 
 int humidifierState = 0;
 int targetHumidity = 0;
+
+int fanState = 1; // пропеллер нормально замкнутый, поэтому состояние и управление инверсное

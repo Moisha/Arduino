@@ -17,6 +17,7 @@
         "thread": "cpp",
         "cstdint": "cpp",
         "ratio": "cpp",
-        "ostream": "cpp"
+        "ostream": "cpp",
+        "cmath": "cpp"
     }
 }
