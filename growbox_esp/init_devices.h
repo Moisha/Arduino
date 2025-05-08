@@ -13,6 +13,9 @@ void initRelays()
   logCommon("pinMode humidifier"); 
   pinMode(HUMIDIFIER_PIN, OUTPUT);
 
+  logCommon("pinMode fan"); 
+  pinMode(FAN_PIN, OUTPUT);
+
   logCommon("pinMode done"); 
 
   switchLamp(false);

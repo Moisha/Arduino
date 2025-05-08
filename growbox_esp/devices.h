@@ -17,7 +17,7 @@
 #define HUMIDIFIER_PIN_ON LOW 
 #define HUMIDIFIER_PIN_OFF 1 - HUMIDIFIER_PIN_ON
 
-#define FAN_PIN 19
+#define FAN_PIN 27
 #define FAN_PIN_ON HIGH // пропеллер нормально замкнутый, при отключении включается система СО2
 #define FAN_PIN_OFF 1 - FAN_PIN_ON
 

@@ -90,11 +90,18 @@ bool readRTC(Readings *r)
 
 void switchDevice(String name, bool v, int pin, int on, int off)
 {
+  int realVal = v ? on : off;
+
   logDHT(name, false);
   logDHT(" ", false);
-  logDHT(v);
+  logDHT(v, false);
+  logDHT("(", false);
+  logDHT(pin, false);
+  logDHT("->", false);
+  logDHT(realVal, false);
+  logDHT(")");
 
-  digitalWrite(pin, v ? on : off);  
+  digitalWrite(pin, realVal);  
 }
 
 void switchHumidifier(bool v)
@@ -163,9 +170,21 @@ void checkFan(Readings *r)
 {
   // пропеллер включаем ночью или при превышении допустимой температуры
   if (!lampRelayState || isnan(r->temperature) || r->temperature >= MAX_DAY_TEMPERATURE)
+  {
+    logDHT("checkFan - fan on, co2 off");
     switchFan(true);
+  }
   else if (r->temperature <= TOLERABLE_DAY_TEMPERATURE)
+  {
+    logDHT("checkFan - fan off, co2 n");
     switchFan(false);
+  }
+  else
+  {
+    logDHT("checkFan - do nothing, fanState = ", false);
+    logDHT(fanState);
+  }
+
 }
 
 void updateGlobalVars(Readings *r)
