@@ -16,6 +16,9 @@ void initRelays()
   logCommon("pinMode fan"); 
   pinMode(FAN_PIN, OUTPUT);
 
+  logCommon("pinMode fan"); 
+  pinMode(CO2_RELAY_PIN, OUTPUT);
+
   logCommon("pinMode done"); 
 
   switchLamp(false);
