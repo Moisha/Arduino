@@ -9,8 +9,8 @@
 #define LOG_LAMP_MODE
 #define LOG_HTTP
 
-int lampNightStartHour[2] = {12, 11};
-int lampDayStartHour[2] = {18, 23};
+int lampNightStartHour[2] = {12, 10};
+int lampDayStartHour[2] = {18, 22};
 
 #define READINGS_ARCHIVE_LENGTH 100
 

@@ -11,8 +11,8 @@
 
 #define DEVICE_LOCATION "Dungeon"
 
-int lampNightStartHour[2] = {12, 11};
-int lampDayStartHour[2] = {18, 23};
+int lampNightStartHour[2] = {12, 10};
+int lampDayStartHour[2] = {18, 22};
 
 #define READINGS_ARCHIVE_LENGTH 100
 
@@ -31,5 +31,6 @@ int lampDayStartHour[2] = {18, 23};
 
 #define MAX_DAY_TEMPERATURE 35
 #define TOLERABLE_DAY_TEMPERATURE 30
+#define BREATHING_MINUTES 5 // минуты в начале каждого часа, когда пропеллер включается на проветривание даже при работающем  СО2
 
 #endif

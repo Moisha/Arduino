@@ -168,8 +168,12 @@ void checkLamp(Readings *r)
 
 void checkFan(Readings *r)
 {
+  DateTime dt(r->dt);
   // пропеллер включаем ночью или при превышении допустимой температуры
-  if (!lampRelayState || isnan(r->temperature) || r->temperature >= MAX_DAY_TEMPERATURE)
+  if (!lampRelayState 
+      || dt.minute() < BREATHING_MINUTES 
+      || isnan(r->temperature) 
+      || r->temperature >= MAX_DAY_TEMPERATURE)
   {
     logDHT("checkFan - fan on, co2 off");
     switchFan(true);
