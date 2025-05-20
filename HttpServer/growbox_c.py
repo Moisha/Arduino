@@ -9,7 +9,7 @@ def dtToPgString(unix_dt):
 
 def check_float_prop(val, max_val = 100):
     v = float(val)
-    return (v > 0) & (v < max_val)
+    return (v >= 0) & (v <= max_val)
 
 
 def appendField(props, propName, fieldName, fields, values, checkFloat = False, max_val = 100):
@@ -32,7 +32,8 @@ def saveToPg(post_body):
     appendField(props, 'targetHumidity', 'humidity_target', fields, values, True)
     appendField(props, 'temperature', 'temperature', fields, values, True)
     appendField(props, 'co2', 'co2', fields, values, True, 2000)
-    appendField(props, 'fanState', 'fan_state', fields, values)
+    appendField(props, 'co2State', 'co2_state', fields, values, True, 1)
+    appendField(props, 'fanState', 'fan_state', fields, values, True, 1)
 
     field_list = ", ".join(fields)
     value_list = ", ".join(values)
