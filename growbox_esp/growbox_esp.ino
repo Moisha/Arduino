@@ -37,6 +37,7 @@ void loop()
     checkLamp(r);
     checkHumidifier(r);
     checkFan(r);
+    checkCo2(r);
     updateGlobalVars(r);
     displayValues(r);
     postData(r);

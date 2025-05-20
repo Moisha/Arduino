@@ -21,6 +21,7 @@ class Readings
     bool lampRelayState;
     bool humidifierState;
     bool fanState;
+    bool co2State;
 
   Readings() 
   { 
@@ -38,6 +39,7 @@ class Readings
     lampRelayState = false;
     humidifierState = false;
     fanState = true;
+    co2State = false;
   }
 
   void assign(Readings *source)
@@ -51,6 +53,7 @@ class Readings
     lampRelayState = source->lampRelayState;
     humidifierState = source->humidifierState;
     fanState = source->fanState;
+    co2State = source->co2State;
   }
 
   String formatForJSON(String name, String val)
@@ -72,7 +75,8 @@ class Readings
       formatForJSON("lampMode", String((int)lampMode)) + 
       formatForJSON("lampState", String((int)lampRelayState)) +
       formatForJSON("humidifierState", String((int)humidifierState)) +
-      formatForJSON("fanState", String((int)fanState));
+      formatForJSON("fanState", String((int)fanState)) +
+      formatForJSON("co2State", String((int)co2State));
 
     if (!isnan(temperature))
       res += formatForJSON("temperature", floatToStr(temperature));

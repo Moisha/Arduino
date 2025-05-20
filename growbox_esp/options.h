@@ -33,4 +33,7 @@ int lampDayStartHour[2] = {18, 22};
 #define TOLERABLE_DAY_TEMPERATURE 30
 #define BREATHING_MINUTES 5 // минуты в начале каждого часа, когда пропеллер включается на проветривание даже при работающем  СО2
 
+#define DAY_CO2_MIN 1200
+#define DAY_CO2_MAX 1500
+
 #endif

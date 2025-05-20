@@ -21,7 +21,10 @@
 #define FAN_PIN_ON HIGH // пропеллер нормально замкнутый, при отключении включается система СО2
 #define FAN_PIN_OFF 1 - FAN_PIN_ON
 
-#define CO2_PIN 35
+#define CO2_READINGS_PIN 35
+#define CO2_RELAY_PIN 26
+#define CO2_RELAY_PIN_ON LOW 
+#define CO2_RELAY_PIN_OFF 1 - CO2_RELAY_PIN_ON
 
 #define HUMIDIFIER_TARGET_PIN 34
 #define DHT_PIN  33
@@ -33,7 +36,7 @@
 DHT dht(DHT_PIN, DHTTYPE); // temp and hum
 RTC_DS1307 rtc; // real time clock
 LiquidCrystal_I2C lcd(0x27, 16, 2); // display
-MQ135 co2Sensor = MQ135(CO2_PIN);
+MQ135 co2Sensor = MQ135(CO2_READINGS_PIN);
 
 int lampRelayState = 0;
 int lampMode = 0; // 0 - veg, 1 - bloom, 2 - on, 3 - off
@@ -42,3 +45,4 @@ int humidifierState = 0;
 int targetHumidity = 0;
 
 int fanState = 1; // пропеллер нормально замкнутый, поэтому состояние и управление инверсное
+int co2State = 0;

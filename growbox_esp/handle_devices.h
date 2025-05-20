@@ -6,7 +6,7 @@
 
 void readCO2(Readings *r)
 {
-  int rawVal = analogRead(CO2_PIN);
+  int rawVal = analogRead(CO2_READINGS_PIN);
   if (rawVal < 10)
   {
     logDHT("no CO2 sensor");
@@ -20,6 +20,9 @@ void readCO2(Readings *r)
     r->co2 = co2Sensor.getCorrectedPPM(r->temperature, r->humidity);
   else
     r->co2 = co2Sensor.getPPM();    
+
+  logDHT("CO2 = ", false);
+  logDHT(r->co2);
 }
 
 void readDHT(Readings *r)
@@ -122,6 +125,12 @@ void switchFan(bool v)
   switchDevice("switchFan", v, FAN_PIN, FAN_PIN_ON, FAN_PIN_OFF);
 }
 
+void switchCo2(bool v)
+{
+  co2State = v;
+  switchDevice("switchCo2", v, CO2_RELAY_PIN, CO2_RELAY_PIN_ON, CO2_RELAY_PIN_OFF);
+}
+
 void checkHumidifier(Readings *r)
 {
   int target = 4096 - analogRead(HUMIDIFIER_TARGET_PIN); // почему-то потерциометр работает только вверх ногами
@@ -173,14 +182,15 @@ void checkFan(Readings *r)
   if (!lampRelayState 
       || dt.minute() < BREATHING_MINUTES 
       || isnan(r->temperature) 
-      || r->temperature >= MAX_DAY_TEMPERATURE)
+      || r->temperature >= MAX_DAY_TEMPERATURE
+      || isnan(r->co2))
   {
     logDHT("checkFan - fan on, co2 off");
     switchFan(true);
   }
   else if (r->temperature <= TOLERABLE_DAY_TEMPERATURE)
   {
-    logDHT("checkFan - fan off, co2 n");
+    logDHT("checkFan - fan off, co2 on");
     switchFan(false);
   }
   else
@@ -188,7 +198,30 @@ void checkFan(Readings *r)
     logDHT("checkFan - do nothing, fanState = ", false);
     logDHT(fanState);
   }
+}
 
+void checkCo2(Readings *r)
+{
+  if (fanState == 1)
+  {
+    logDHT("checkCo2 - fan is on, co2 off");
+    switchCo2(false);
+  }
+  else if (r->co2 < DAY_CO2_MIN)
+  {
+    logDHT("checkCo2 - low co2, co2 on");
+    switchCo2(true);
+  }
+  else if (r->co2 > DAY_CO2_MAX)
+  {
+    logDHT("checkCo2 - high co2, co2 off");
+    switchCo2(false);
+  }
+  else
+  {
+    logDHT("checkCo2 - co2 ok, do nothing, relay = ", false);
+    logDHT(co2State);
+  }
 }
 
 void updateGlobalVars(Readings *r)
@@ -198,4 +231,5 @@ void updateGlobalVars(Readings *r)
   r->humidifierState = humidifierState;
   r->targetHumidity = targetHumidity;
   r->fanState = fanState;
+  r->co2State = co2State;
 }
