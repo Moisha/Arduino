@@ -36,6 +36,17 @@ void displayDt(Readings *r)
   lcd.print(LCD_FILLER);
 
   lcdSecondLine();  
+  lcd.print(LCD_FILLER);
+}
+
+void displayCo2(Readings *r)
+{
+  lcdFirstLine();  
+  lcd.print("Relay: ");
+  lcd.print(r->co2State);    
+  lcd.print(LCD_FILLER);
+
+  lcdSecondLine();  
   lcd.print("Fan: ");
   lcd.print(r->fanState);
   lcd.printf(" CO2: ");
@@ -110,12 +121,16 @@ void displayValues(Readings *r)
       displayLamp(r);
       break;
     
-     default:
+    case 3:
+      displayCo2(r);
+      break;
+
+      default:
       break;
   }
 
   displayMode++;
-  displayMode %= 3;
+  displayMode %= 4;
 }
 
 #endif

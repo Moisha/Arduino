@@ -118,7 +118,8 @@ bool wifi_needSend(Readings *r)
     || (r->lampMode != lastWiFiExchangeReadings.lampMode)
     || (r->lampRelayState != lastWiFiExchangeReadings.lampRelayState)
     || (r->humidifierState != lastWiFiExchangeReadings.humidifierState)
-    || (r->fanState != lastWiFiExchangeReadings.fanState);
+    || (r->fanState != lastWiFiExchangeReadings.fanState)
+    || (r->co2State != lastWiFiExchangeReadings.co2State);
 
   LogWiFi("WiFi: ", false);
   LogWiFi(res ? "Need send" : "No need send");
