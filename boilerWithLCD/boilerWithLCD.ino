@@ -3,7 +3,8 @@
 // библиотека для работы с датчиком DS18B20
 #include <DallasTemperature.h>
 #include <LiquidCrystal_I2C.h>
-#include "Wire.h"
+#include <Wire.h>
+#include "wifi.h"
 
 // если не прописывается программа - зачисти флешку
 // esptool.py --port /dev/ttyUSB0 erase_flash
@@ -153,6 +154,7 @@ void setup(){
 
   pinMode(A0, INPUT); 
   pinMode(PIN_RELAY, OUTPUT);
+  initWiFi();
 }
 
 void loop(){
@@ -176,6 +178,7 @@ void loop(){
   
   checkRelay(temperature, targetTemp);
   displayState(temperature, targetTemp);
+  postData(temperature, targetTemp, RelayState);
 
   delay(1000);
 }
