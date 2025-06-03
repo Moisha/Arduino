@@ -25,9 +25,17 @@ def saveToPg(post_body):
     device = device_condition(props['source'])
     dt_now = f"'{datetime.now().strftime('%Y%m%d %H:%M:%S')}'"
 
-    fields = ['id_device', 'dt_server', 'raw_dt', 'dt', 'lamp_state', 'lamp_mode', 'humidifier_state']
-    values = [device, dt_now, props['dt'], dtToPgString(props['dt']), props['lampState'], props['lampMode'], props['humidifierState']]
+    fields = ['id_device', 'dt_server']
+    values = [device, dt_now]
 
+    if 'dt' in props:
+        fields += ['dt']
+        values += [dtToPgString(props['dt'])]
+
+    appendField(props, 'dt', 'raw_dt', fields, values, True, 1)
+    appendField(props, 'lampState', 'lamp_state', fields, values, True, 1)
+    appendField(props, 'lampMode', 'lamp_mode', fields, values, True, 1)
+    appendField(props, 'humidifierState', 'humidifier_state', fields, values, True, 1)
     appendField(props, 'humidity', 'humidity', fields, values, True)
     appendField(props, 'targetHumidity', 'humidity_target', fields, values, True)
     appendField(props, 'temperature', 'temperature', fields, values, True)
