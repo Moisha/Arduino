@@ -164,7 +164,7 @@ bool wifi_needSend()
   return res;
 }
 
-bool postData(int temperature, int targetTemp, bool relayState)
+bool postData(float temperature, int targetTemp, bool relayState)
 {
   LogWiFi("WiFi: post data");
   if (!wifi_needSend())

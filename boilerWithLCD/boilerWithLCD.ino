@@ -38,6 +38,20 @@ bool RelayState = false;
 
 int indicator = 0;
 
+const int temperatureHistoryAnalysisDepth = 5;
+const int temperatureHistoryAlarmDelta = 3;
+const int temperatureHistoryDepth = 10;
+float temperatureHistory[temperatureHistoryDepth];
+long long lastTemperatureHistoryMillis = 0;
+
+void clearTemperatureHistory()
+{
+  for (int i = 0; i < temperatureHistoryDepth; i++)
+    temperatureHistory[i] = 0;
+
+  lastTemperatureHistoryMillis = 0;
+}
+
 void setRelay(bool state)
 {
   Serial.print("Relay: ");
@@ -67,6 +81,54 @@ int resistanceToTemp(int sensorValue)
   return res;
 }
 
+void saveTemperatureHistory(float temperature)
+{
+  long long currentMillis = millis();
+  if (abs(currentMillis - lastTemperatureHistoryMillis) < 60 * 1000 )
+    return;
+
+  for (int i = 1; i < temperatureHistoryDepth; i++)
+    temperatureHistory[i] = temperatureHistory[i - 1];
+
+  temperatureHistory[0] = temperature;
+  lastTemperatureHistoryMillis = currentMillis;
+}
+
+bool temperatureIsRisingFast()
+{
+  for (int i = 1; i < temperatureHistoryDepth; i++)
+  {
+    Serial.print("T hist: ");
+    Serial.print(temperatureHistory[i]);
+    Serial.print(" ");
+  }
+  Serial.println("");
+
+  for (int i = 0; i < temperatureHistoryAnalysisDepth; i++)
+  {
+    float t = temperatureHistory[i];
+    if (isnan(t) || t < 1)
+    {
+      Serial.println("Temperature analysis: insufficient data");
+      return false;
+    }
+    
+    if (t < temperatureHistory[i + 1]) // температура неизвестна или не падает
+    {
+      Serial.println("Temperature analysis: not raising");
+      return false;
+    }
+  }
+
+  float delta = temperatureHistory[0] - temperatureHistory[temperatureHistoryAnalysisDepth];
+  bool res = delta >= temperatureHistoryAlarmDelta;
+  Serial.print("Temperature analysis: delta = ");
+  Serial.print(delta);
+  Serial.print(", res = ");
+  Serial.println(res);
+  return res;  
+}
+
 void checkRelay(float temperature, int targetTemp)
 {
   if (isnan(temperature) || isnan(targetTemp))
@@ -75,15 +137,14 @@ void checkRelay(float temperature, int targetTemp)
     return;
   }
 
+  if (temperatureIsRisingFast())
+    setRelay(false);
+  else
   if (temperature <= (targetTemp - TEMP_HISTERESIS))
-  {
     setRelay(true);
-  }
   else
   if (temperature >= (targetTemp + TEMP_HISTERESIS))
-  {
     setRelay(false); 
-  }
 }
 
 void lcdFirstLine()
@@ -112,16 +173,19 @@ char nextIndicator()
   return '0';
 }
 
-void displayState(int temperature, int targetTemp)
+void displayState(float temperature, int targetTemp)
 {
   lcdFirstLine();
-  lcd.printf("T: %02d (%02d - %02d)           ", temperature, targetTemp - TEMP_HISTERESIS, targetTemp + TEMP_HISTERESIS);
+  lcd.printf("T: %02d (%02d - %02d)           ", (int)round(temperature), targetTemp - TEMP_HISTERESIS, targetTemp + TEMP_HISTERESIS);
   lcdSecondLine();
   lcd.printf("R%d             ", RelayState);
   lcd.print(nextIndicator());
 }
 
-void setup(){
+void setup()
+{
+  clearTemperatureHistory();
+
   // инициализируем работу Serial-порта
   Serial.begin(115200);
   // начинаем работу с датчиком
@@ -157,9 +221,10 @@ void setup(){
   initWiFi();
 }
 
-void loop(){
+void loop()
+{
   // переменная для хранения температуры
-  int temperature;
+  float temperature;
   // отправляем запрос на измерение температуры
   sensor.requestTemperatures();
   // считываем данные из регистра датчика
@@ -171,11 +236,16 @@ void loop(){
   int r = analogRead(A0);
   Serial.print("Resistance: ");
   Serial.println(r);
+  // задержка после чтения, чтобы WiFi отдышался. 
+  //  When WiFi is under operation, analogRead() result may be cached for at least 5ms between effective calls.
+  // См. https://arduino-esp8266.readthedocs.io/en/latest/reference.html#analog-input
+  delay(10); 
 
   int targetTemp = resistanceToTemp(r);
   Serial.print("Target Temp: ");
   Serial.println(targetTemp);
   
+  saveTemperatureHistory(temperature);
   checkRelay(temperature, targetTemp);
   displayState(temperature, targetTemp);
   postData(temperature, targetTemp, RelayState);
