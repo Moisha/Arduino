@@ -78,7 +78,7 @@ void displayLamp(Readings *r)
   switch (r->lampMode)
   {
     case 0: 
-      lcd.print("Veg");
+      lcd.print("Grow");
       break;
     case 1: 
       lcd.print("Bloom");

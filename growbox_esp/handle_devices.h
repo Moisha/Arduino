@@ -93,6 +93,9 @@ bool readRTC(Readings *r)
 
 void switchDevice(String name, bool v, int pin, int on, int off)
 {
+  if (pin <= 0)
+    return;
+
   int realVal = v ? on : off;
 
   logDHT(name, false);
@@ -163,16 +166,31 @@ void checkHumidifier(Readings *r)
 void checkLamp(Readings *r)
 {
   lampMode = digitalRead(GROW_VEG_SWITCH_PIN); // read from switch
+
   logLamp("lampMode ", false);
   logLamp(lampMode);    
 
-  DateTime dt(r->dt);
-  int dayStart = lampDayStartHour[lampMode];
-  int nightStart = lampNightStartHour[lampMode];
-  if (dayStart < nightStart)
-    switchLamp(dt.hour() >= dayStart && dt.hour() < nightStart);
-  else
-    switchLamp(dt.hour() < nightStart || dt.hour() >= dayStart);
+  switch (lampMode)
+  {
+    case LAMP_ALWAYS_ON:
+      switchLamp(true);
+      return; 
+
+    case LAMP_ALWAYS_OFF:
+      switchLamp(true);
+      return; 
+
+    default:
+    {
+      DateTime dt(r->dt);
+      int dayStart = lampDayStartHour[lampMode];
+      int nightStart = lampNightStartHour[lampMode];
+      if (dayStart < nightStart)
+        switchLamp(dt.hour() >= dayStart && dt.hour() < nightStart);
+      else
+        switchLamp(dt.hour() < nightStart || dt.hour() >= dayStart);
+    }
+  }
 }
 
 void checkFan(Readings *r)

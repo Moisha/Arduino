@@ -22,7 +22,7 @@ void initRelays()
   logCommon("pinMode done"); 
 
   switchLamp(false);
-  switchHumidifier(true);
+  switchHumidifier(false);
 
   logCommon("initRelays done");
 }

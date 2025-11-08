@@ -13,7 +13,7 @@
 #define LAMP_PIN_ON LOW
 #define LAMP_PIN_OFF 1 - LAMP_PIN_ON
 
-#define HUMIDIFIER_PIN 18
+#define HUMIDIFIER_PIN 26
 #define HUMIDIFIER_PIN_ON LOW 
 #define HUMIDIFIER_PIN_OFF 1 - HUMIDIFIER_PIN_ON
 
@@ -22,7 +22,7 @@
 #define FAN_PIN_OFF 1 - FAN_PIN_ON
 
 #define CO2_READINGS_PIN 35
-#define CO2_RELAY_PIN 26
+#define CO2_RELAY_PIN 0
 #define CO2_RELAY_PIN_ON LOW 
 #define CO2_RELAY_PIN_OFF 1 - CO2_RELAY_PIN_ON
 
@@ -33,13 +33,17 @@
 #define SCL_PIN 22
 #define SDA_PIN 16
 
-DHT dht(DHT_PIN, DHTTYPE); // temp and hum
+DHT dht(DHT_PIN, DHTTYPE); // temp and humidity
 RTC_DS1307 rtc; // real time clock
 LiquidCrystal_I2C lcd(0x27, 16, 2); // display
 MQ135 co2Sensor = MQ135(CO2_READINGS_PIN);
 
 int lampRelayState = 0;
-int lampMode = 0; // 0 - veg, 1 - bloom, 2 - on, 3 - off
+int lampMode = 0; // 0 - grow, 1 - bloom, 2 - on, 3 - off
+#define LAMP_GROW 0
+#define LAMP_BLOOM 1
+#define LAMP_ALWAYS_ON 2
+#define LAMP_ALWAYS_OFF 3
 
 int humidifierState = 0;
 int targetHumidity = 0;
