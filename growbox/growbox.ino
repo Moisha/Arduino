@@ -38,7 +38,7 @@ void initRelays()
 
   switchLamp(false);
   switchWatering(false);
-  switchHumidifier(true);
+  switchHumidifier(false);
 
   Serial.println("initRelays done");
 }
@@ -137,6 +137,7 @@ bool readRTC(Readings *r)
   logTime(dt.timestamp());
 
   // Время от NTP-сервера считаем более корректным, чем глюкавый RTC
+  connectWiFi();
   long wifiDT = getNTPTime();
   if (wifiDT > 0)
   {    
@@ -186,7 +187,7 @@ void switchHumidifier(bool v)
   logDHT(v);
 
   humidifierState = v;
-  digitalWrite(HUMIDIFIER_PIN, v ? LOW : HIGH);  
+  digitalWrite(HUMIDIFIER_PIN, v ? HIGH : LOW);  
 }
 
 void switchLamp(bool v)
@@ -197,7 +198,7 @@ void switchLamp(bool v)
   #endif
 
   lampRelayState = v;
-  digitalWrite(LAMP_PIN, v ? LOW : HIGH);  
+  digitalWrite(LAMP_PIN, v ? HIGH : LOW);  
 }
 
 void checkHumidifier(Readings *r)
@@ -407,6 +408,7 @@ void loop()
     }
     */
   }
+  else scanWiFi();
 
   delay(3000);
 }
