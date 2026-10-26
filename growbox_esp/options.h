@@ -11,8 +11,8 @@
 
 #define DEVICE_LOCATION "Dungeon"
 
-int lampNightStartHour[2] = {12, 10};
-int lampDayStartHour[2] = {18, 22};
+int lampNightStartHour[2] = {12, 7};
+int lampDayStartHour[2] = {18, 19};
 
 #define READINGS_ARCHIVE_LENGTH 100
 

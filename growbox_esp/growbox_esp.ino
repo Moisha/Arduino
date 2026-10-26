@@ -13,10 +13,10 @@ void setup() {
   delay(1000);  
 
   initReadings();
-  initSerial(); 
-  initDHT();
   initI2C();
   initDisplay();  
+  initSerial(); 
+  initDHT();
   initRelays();
   initGrowVerSwitch();
   initWiFi();
@@ -25,8 +25,6 @@ void setup() {
 
 void loop()
 {  
-  printGreeting();
-
   Readings *r = prepareReadings();
   // scanWiFi();
 

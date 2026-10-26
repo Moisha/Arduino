@@ -28,7 +28,7 @@
 
 #define HUMIDIFIER_TARGET_PIN 34
 #define DHT_PIN  33
-#define GROW_VEG_SWITCH_PIN 17
+#define GROW_BLOOM_SWITCH_PIN 17
 
 #define SCL_PIN 22
 #define SDA_PIN 16

@@ -91,7 +91,7 @@ void initSerial()
 
 void initGrowVerSwitch()
 {
-  pinMode(GROW_VEG_SWITCH_PIN, INPUT_PULLDOWN);
+  pinMode(GROW_BLOOM_SWITCH_PIN, INPUT_PULLDOWN);
 }
 
 void printGreeting()
@@ -117,5 +117,6 @@ void initDisplay()
   lcd.clear();         
   lcd.backlight();      // Make sure backlight is on  
 
-  lcd.setCursor(0, 0);  
+  printGreeting();
+  lcd.setCursor(0, 0);
 }

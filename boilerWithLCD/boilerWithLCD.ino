@@ -16,7 +16,7 @@
 #define PIN_RELAY D5
 
 //  реле Ардуино инверсное, SSR-10 прямое  
-#define STRAIGTH_RELAY true
+#define STRAIGTH_RELAY false
 
 #define TEMP_HISTERESIS 5
 
@@ -192,7 +192,6 @@ void setup()
   sensor.begin();
   // устанавливаем разрешение датчика от 9 до 12 бит
   sensor.setResolution(12);
-  
 
   Wire.begin(D2, D1);
   
@@ -200,7 +199,7 @@ void setup()
   lcd.clear();         
   lcd.backlight();
 
-  // вместо обратного слеша на 1602 значой йены, запилим свой
+  // вместо обратного слеша на 1602 значок йены, запилим свой
   byte ReverseSlash[] = {
     B00000,
     B10000,
@@ -214,10 +213,11 @@ void setup()
 
   lcd.createChar(0, ReverseSlash);
 
-  setRelay(false);
-
   pinMode(A0, INPUT); 
   pinMode(PIN_RELAY, OUTPUT);
+
+  setRelay(false);
+
   initWiFi();
 }
 

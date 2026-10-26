@@ -165,7 +165,7 @@ void checkHumidifier(Readings *r)
 
 void checkLamp(Readings *r)
 {
-  lampMode = digitalRead(GROW_VEG_SWITCH_PIN); // read from switch
+  lampMode = digitalRead(GROW_BLOOM_SWITCH_PIN); // read from switch
 
   logLamp("lampMode ", false);
   logLamp(lampMode);    

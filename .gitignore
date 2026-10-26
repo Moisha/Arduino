@@ -2,3 +2,4 @@ growbox/build/
 growbox_esp/build/
 HttpServer/*.txt
 boilerWithLCD/build
+aero/*
